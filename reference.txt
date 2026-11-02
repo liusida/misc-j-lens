@@ -1,0 +1,14 @@
+J Lens:
+Verbalizable Representations Form a Global Workspace in Language Models
+https://transformer-circuits.pub/2026/workspace/index.html [Anthropic]
+
+A Mathematical Theory of the Jacobian Lens
+https://arxiv.org/abs/2610.31955
+
+Tuned Lens:
+Eliciting Latent Predictions from Transformers with the Tuned Lens
+https://arxiv.org/abs/2303.08112
+
+
+Jump to Conclusions: Short-Cutting Transformers With Linear Transformations
+https://arxiv.org/abs/2303.09435 [Geva]

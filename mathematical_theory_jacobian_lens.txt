@@ -1,0 +1,2184 @@
+                                         Preprint
+
+
+
+
+                                         A M ATHEMATICAL T HEORY OF THE JACOBIAN L ENS
+                                          Mitchell Ostrow                                         Daoyuan Qian
+                                          Department of Brain and Cognitive Sciences              Department of Brain and Cognitive Sciences
+                                          Massachusetts Institute of Technology                   Massachusetts Institute of Technology
+                                          ostrow@mit.edu
+
+                                          Toni J.B. Liu                              Ila Fiete
+                                          Department of Physics                      Department of Brain and Cognitive Sciences
+                                          Cornell University                         Massachusetts Institute of Technology
+arXiv:2610.31955v1 [cs.LG] 22 Oct 2026
+
+
+
+
+                                                                                       A BSTRACT
+
+                                                    Recent work from Anthropic introduced a new interpretability tool, called the
+                                                    Jacobian lens (J-lens, Gurnee et al., 2026). This method identified linear directions
+                                                    in the hidden states of frontier language models that had properties reminiscent
+                                                    of working memory-like representations. However, it is unclear what mechanistic
+                                                    properties of such features make them detectable to the J-lens. To this end, we
+                                                    introduce a mathematical theory of the J-lens, and show that it preferentially identi-
+                                                    fies coherent features – directions that act like leading, spatially coherent Lyapunov
+                                                    modes. Small perturbations along these directions amplify across layers, remain
+                                                    roughly constant across token positions, and are consistent across different contexts.
+                                                    While we are agnostic to whether these properties are necessarily associated with a
+                                                    “Global Workspace”, the analytically derived preferences of the J-lens nevertheless
+                                                    explain prior empirical applied to both model classes. We validate our analysis on
+                                                    a Bayes filter and a toy transformer, each optimally predicting next tokens emitted
+                                                    from a Hidden Markov Model (HMM). We show how modulating task parameters
+                                                    that change the coherence of features in the Bayes filter correspondingly and pre-
+                                                    dictively modulates the response of the J-lens . We also introduce of a family of
+                                                    J-lenses built to emphasize different temporal scales of information processing in
+                                                    LLMs, which we call ω-J-lenses.
+
+                                         1    I NTRODUCTION
+                                         In a recent paper, Gurnee et al. (2026) introduced a novel interpretability technique that they claimed
+                                         could identify an internal ‘workspace’ in large language models (LLMs), which had properties
+                                         reminiscent of the Global Workspace (Baars, 1988; Dehaene et al., 1998). The object they primarily
+                                         study is the ‘Jacobian lens’, or ‘J-lens’. This interpretability tool is designed in the spirit of other
+                                         ‘lenses’ (nostalgebraist, 2020; Belrose et al., 2023), which seek to decode transformer hidden state
+                                         activations into language by applying the unembedding matrix of the model to these activations
+                                         (potentially after a learned affine map, as in the tuned lens). These lenses benefit interpretability by
+                                         mapping hidden states to tokens, which are in the space of language and hopefully more interpretable.
+                                         Decoding intermediate layers this way has shown that predictions are refined gradually across
+                                         depth (nostalgebraist, 2020; Belrose et al., 2023), that multilingual models pass through an English-
+                                         like latent space before producing the target language (Wendler et al., 2024), that false few-shot
+                                         demonstrations derail predictions only after a critical layer (Halawi et al., 2024), and that a single
+                                         hidden state already carries information about tokens several positions ahead (Pal et al., 2023). The
+                                         trajectory of tuned-lens predictions across layers can also detect malicious inputs (Belrose et al.,
+                                         2023).
+                                         The Jacobian lens (J-lens, Gurnee et al., 2026) continues this line of work by introducing a new
+                                         transfer operator onto the residual stream vector before the application of the unembedding matrix
+                                         and mapping to tokens. This operator is the Jacobian of the transformer, averaged over tokens. In
+                                         their paper, the motivation for the usage of the Jacobian K is based on standard results in calculus:
+                                         A Jacobian describes how a small perturbation in the input of a function results in a change in the
+                                         output. When the Jacobian is studied in an LLM, it provides directions in the residual stream that are
+
+
+                                                                                              1
+Preprint
+
+
+
+
+“verbalizable” (Gurnee et al., 2026), which is to say that it identifies how perturbations change the
+linguistic output of the model. However, this property holds only in the local neighborhood of the
+point on which the Jacobian is defined, and the J-lens is defined by averaging over prompts, tokens,
+and future positions in the output layer. An average Jacobian has no reason to behave like any of its
+elements. Indeed, if the Jacobians of a system form a curved manifold, the average Jacobian can easily
+lie off-manifold. More generally, well-known features that describe the behavior of linear operators
+(e.g., singular vectors and values, which are nonlinear functions of a matrix) can deviate grossly
+from those of individual Jacobians under averaging (Appendix A). In Figs. 1 and 10 we visually
+demonstrate this phenomenon for four open source LLMs. What, then, does the J-lens capture?
+
+                                                               gemma-2-2b                  Llama-3.2-3B
+Recent work (Yan et al., 2026) has attempted                individual Jacobians
+to analyze the J-lens as an approximate least
+squares map from the hidden state to the output
+using Stein’s lemma (Stein, 1981). However,
+
+
+
+
+                                                     PC 2
+
+
+
+
+                                                                                    PC 2
+Stein’s lemma only applies when the input data
+is sampled from a Gaussian distribution, and                        mean Jacobian
+transformer hidden states are notoriously non-
+Gaussian, with heavy-tailed outlier features and                     PC 1                      PC 1
+a few activations that are orders of magnitude                  Qwen3.5-9B                 Qwen3-14B
+larger than the rest (Dettmers et al., 2022; Sun
+et al., 2024). Rather, the J-lens is most directly
+related to a branch of dynamical systems theory
+called Lyapunov theory, which describes how
+                                                     PC 2
+
+
+
+
+                                                                                    PC 2
+perturbations grow or shrink in spatiotemporal
+dynamical systems.
+
+The Jacobian lens. Let hℓ,t (x) ∈ Rd be the                          PC 1                      PC 1
+activation at layer ℓ and token position t in a
+                                                     Figure 1: Low-dimensional projection (principal com-
+fixed sequence x, and let L be the final layer.      ponent analysis, PCA) of the top 100 singular values for
+Write τ to represent a lag in token positions,       individual (black) and mean (red) Jacobians of four dif-
+H for the number of lags averaged over, and          ferent LLMs (Appendix B). Each Jacobian is evaluated
+c = (x, t) for a context. Define                     with input at an intermediate layer chosen to be halfway
+                        ∂hL,t+τ (x)                  through the model and output at the final layer. Prompts
+       K(c, ℓ, τ ) :=               ,                are sampled from a range of datasets with different top-
+                         ∂hℓ,t (x)                   ics (Wikipedia, Python code, math, news, etc.). Jacobian
+                          H−1                        spectra are plotted in Fig. 9.
+                        1 X                   (1)
+        Gc (ℓ, H) :=           K(c, ℓ, τ )
+                        H τ =0
+           JH (ℓ) := Ec Gc (ℓ, H).
+
+The lens is then applied to a state, along with
+the unembedding matrix:
+                                                                  
+                       lens(hℓ,t ) = softmax WU norm(JH (ℓ) hℓ,t )                                        (2)
+where WU is the model’s unembedding matrix.
+
+Lyapunov exponents. Let δh(T ) be a perturbation of a state evolved for T steps under the
+dynamics. Its Lyapunov exponent (Oseledets, 1968; Eckmann & Ruelle, 1985) measures asymptotic
+growth of the perturbation:
+                                           1      ∥δh(T )∥
+                             χ = lim         log           ,    δh(0) ̸= 0,                          (3)
+                                  T →∞ T          ∥δh(0)∥
+when the limit exists. At finite T , the finite-time Lyapunov exponents are
+                                                     1
+                                          χi (T ) = log si (T ),                                     (4)
+                                                     T
+where si (T ) are singular values of the full T -step Jacobian. For dynamical systems, this is typically
+computed by chaining with multiplication each one-step Jacobian with iterative renormalization
+
+
+                                                     2
+Preprint
+
+
+
+
+(Benettin et al., 1980; Engelken et al., 2023). Spatiotemporal versions also resolve how a perturbation
+travels across space: the convective Lyapunov exponent (Deissler & Kaneko, 1987; Jiotsa et al., 2013)
+measures the growth of a perturbation in a reference frame that is moving in space. Hydrodynamic
+Lyapunov modes (Eckmann & Gat, 2000) are long-wavelength Lyapunov vectors whose exponents
+approach zero as their wavenumber k approaches zero.
+For transformers, depth is the evolution coordinate (T ) and token position the spatial coordinate.
+A hydrodynamic interpretation requires identifying long wavelength with growth near zero. We’ll
+show here that the J-space is tightly linked to Lyapunov theory. Under the assumptions below, the
+J-lens favors spatially smooth, slowly varying responses, because it by construction integrates out the
+fast dynamics, implicitly behaving like a low-pass filter in space. With this connection in hand, we
+show that many of the results in the original paper follow naturally. Note that this is not an argument
+that it does not identify a Global Workspace per se, but rather to shed light on what this method is
+designed to capture and why that may or may not align with the philosophical conception of the
+Global Workspace.
+We begin by constructing a model that establishes this connection, and subsequently relax assumptions
+of the model.
+
+Shared and context-specific modes. Suppose our Jacobians can be decomposed as follows:
+                              X                      X
+                K(c, ℓ, τ ) =   eT χi +τ γi ui vi∗ +                      ∗
+                                                       eT χcj +τ γcj ucj vcj ,
+                                 |
+                                     i
+                                              {z             }
+                                                                       j                              (5)
+                                                                   |            {z              }
+                                     S(ℓ,τ ): shared modes        R(c,ℓ,τ ): context-specific modes
+
+with T = L − ℓ the number of layers between the read-in layer and the output, and every mode
+quantity depends on ℓ, which we suppress. γi = µi +iθi describes the cross-token evolution dynamics.
+The shared input directions vi and output directions ui are each orthonormal. Each mode has two
+finite-time Lyapunov exponents: χi ∈ R in depth and µi ∈ R in token position, while θi is the
+mode’s rotation per token. At a fixed (ℓ, τ ), any matrix admits a singular value decomposition (SVD).
+Sharing directions across contexts, factoring depth (Fig. 2a) and lag (Fig. 2b) in this way, and treating
+the two exponents as independent are additional assumptions of this illustrative model. A Lyapunov
+mode is a mode that evolves according to a Lyapunov exponent, and hence is defined by its input
+direction vi . Averaging over lags and contexts splits the lens into a shared part and an averaged
+remainder, JH = SH + Ec Rc , in which shared mode i is weighted by eT χi fH (γi ), with
+                                                                 H−1
+                                                         1 X τγ
+                                            fH (γ) =            e
+                                                         H τ =0
+
+where H denotes the maximum lag between input and output token positions (Appendix C). We
+                                                                                    2
+also assume the context-specific response is no larger than the shared one: Ec ∥Rc ∥2 ≤ M 2 , where
+M = ∥SH ∥2 .
+
+Isolation of slow modes. The future averaging fH (γ) suppresses modes that decay rapidly or
+oscillate quickly. For µi ≤ 0, |fH (γi )| ≤ 1. Slow modes with H|µi |, H|θi | ≪ 1 retain fH (γi ) ≈ 1,
+while rapid decay or oscillation is attenuated. Another way to see this is to consider the Fourier
+decomposition of a response y(τ ) over the window:
+                                                        H−1
+                                                        X
+                                           yeH (ω) =             e−iωτ y(τ ),                         (6)
+                                                        τ =0
+                                                       H−1
+                                         1           1 X
+                                           yeH (0) =        y(τ ).                                    (7)
+                                         H           H τ =0
+
+Thus averaging over time extracts the zero-frequency coefficient of the finite window, thereby
+identifying slowly varying responses in space (token position). Similarly, time (layers) weights
+modes by eT χi , thereby favoring growing or slowly decaying modes. This is not necessarily a strong
+weighting, especially closer to the output when the Jacobian becomes increasingly aligned with the
+identity map.
+
+
+                                                         3
+Preprint
+
+
+
+
+Incoherent directions are suppressed. For a unit input direction v and independent contexts c, c′ ,
+                                      2
+the averaged remainder is ∥(Ec Rc )v∥2 = Ec,c′ ⟨Rc v, Rc′ v⟩, which quantifies the expected overlap
+between two contexts’ responses to the same input (Appendix C). Suppose this overlap is small,
+                                           2
+sup∥v∥=1 Ec,c′ |⟨Rc v, Rc′ v⟩| ≤ η Ec ∥Rc ∥2 with 0 ≤ η < 1. Taking the largest growth over unit
+inputs and assuming bounded scales of the modes,
+                                     2
+                            ∥Ec Rc ∥2 = sup Ec,c′ ⟨Rc v, Rc′ v⟩
+                                           ∥v∥=1
+
+                                         ≤ sup Ec,c′ |⟨Rc v, Rc′ v⟩|                                  (8)
+                                           ∥v∥=1
+                                                         2                   2
+                                         ≤ η Ec ∥Rc ∥2 ≤ ηM 2 = η ∥SH ∥2 .
+Thus for small overlap η, averaging suppresses the incoherent response relative to the shared response.
+Since JH = SH + Ec Rc , its leading singular directions approach those of SH as η → 0.
+
+Relaxing exact shared modes. The above model shows that if spatially (in a transformer, across
+tokens) and contextually coherent Lyapunov modes exist, these modes dominate in the Jacobian lens.
+However, exact shared directions need not exist. We show next under a more general construction
+that the J-lens directions preferentially select Lyapunov modes that (a) maximally grow over depth
+T (magnitude a), (b) are maximally coherent across token lags τ (lag coherence ρτ ), and (c) are
+maximally coherent across different contexts c (context coherence ρc ). Using the same SVD notation,
+write                                      X
+                                                        ∗
+                   Gc = Eτ K(c, ℓ, τ ) =       scj ucj vcj , sc1 ≥ sc2 ≥ · · · ≥ 0.              (9)
+                                             j
+For a unit input direction v, define
+                                 a(v) := Ec,τ ∥K(c, ℓ, τ ) v∥ ,
+                                                 Ec ∥Gc v∥
+                                ρτ (v) :=                        ∈ [0, 1],
+                                            Ec,τ ∥K(c, ℓ, τ ) v∥                                     (10)
+                                           ∥Ec,τ K(c, ℓ, τ ) v∥
+                                ρc (v) :=                       ∈ [0, 1].
+                                               Ec ∥Gc v∥
+We call these the coherence parameters for directions in the Jacobian lens. We use the 2-norm for
+each parameter here, but other norms could reasonably apply as well. a(v) is the average response
+magnitude, ρτ (v) is the lag coherence of a response, and ρc (v) is the context coherence. These
+coherence parameters can be understood intuitively through the lens of spatiotemporal Lyapunov
+modes: a describes the canonical notion of a Lyapunov exponent, here how a direction grows over
+time (layers). ρτ describes how activity along a direction oscillates across spatial (token) positions,
+with ρτ = 1 indicating no oscillation. Lastly, ρc describes how consistently direction is read in and
+written out across different contexts (instantiations of Jacobian), given the same vector.
+We illustrate what each coherence parameter measures in Fig. 2. Intuitively, magnitude measures the
+total effect of a perturbation along a feature direction across both layers and time, thereby capturing
+how persistent or relevant it is. Lag coherence measures how the response of a perturbation changes
+across token positions, for which large values are approximately static, such as the overall topic
+of a document, whereas incoherent features change rapidly, such as word type. Context coherence
+measures whether a perturbation along a direction responds similarly in the same way for different
+contexts, and how prior context modulates its effect. For example, adding in a new rule such as
+“today is opposite day” into context requires reprocessing each feature with this in mind. Context-
+coherent directions are processed consistently across contexts, while incoherent directions change
+their behavior.
+Define ρc = 0, ρτ = 0 when their denominators are zero. The three factors telescope via multiplica-
+tion to yield ∥JH v∥. The leading singular value of the lens is therefore
+                                 σ1 (JH ) = max ρc (v) ρτ (v) a(v).                                  (11)
+                                                 ∥v∥=1
+
+Subsequent directions maximize the same quantity subject to orthogonality to prior input directions
+v1 , . . . , vi−1 . This shows that the J-lens preferentially upweights directions with the largest combi-
+nations of magnitudes a(v) and coherences ρτ (v) ρc (v). In the notation of Eq. 5, the J-lens selects
+
+
+                                                         4
+Preprint
+
+
+
+
+                                                                                                                           context coherent       context incoherent
+              Â>0
+
+
+
+
+                           feature value
+                                                                                                 lag coherent
+
+ l                                                                                               lag incoherent   l
+                                           Four   score   and   seven   years   ago   our   fathers
+
+      Â<0                                                                                             ¿
+                                                                                                                          context 2   context 1   context 2   context 1
+
+
+
+
+Figure 2: Schematic of the three coherence parameters. (left) Schematic of large χ > 0 versus small χ < 0
+magnitude directions. A perturbation grows across layers in the red direction, but shrinks in the blue direction.
+(middle) Schematic of lag-coherent (black) versus lag-incoherent (gray) feature directions across token positions.
+(right) Context-coherent directions evolve similarly across layers in contexts, while context-incoherent directions
+evolve differently.
+
+the modes with the largest growth across layers χi (magnitude), spatial changes that do not oscillate
+much (θi ≈ 0), and ui , vi that change minimally across contexts (context coherence). Gurnee et al.
+(2026) found that the J-space summarized only a small portion of the variance. This observation is
+easily explained by recognizing that variance explained is unrelated to each of the factors in Eq. 11,
+which we formalize now:
+Corollary 1.1. A direction selected by Jacobian averaging may explain arbitrarily little or arbitrarily
+much activation variance. Consequently, the singular values of JH do not determine the variance
+explained by its selected directions.
+
+The proof is a two-dimensional counterexample and is given in Appendix D.
+
+1.1    M APPING COHERENT MODES ONTO TOKENS
+
+The analysis above characterizes the singular modes selected by Jacobian averaging, whereas the
+J-space used in the original paper is constructed from token-indexed directions jq and is therefore not
+simply the leading singular subspace of JH . These descriptions can nevertheless be connected exactly.
+Let JH = U ΣV ∗ , and let wq denote the unembedding vector for token q. The corresponding J-lens
+direction in the input residual stream is
+                                                          X
+                                    ∗
+                           jq := JH   wq = V ΣU ∗ wq =        σi ⟨ui , wq ⟩vi .                    (12)
+                                                                                                                      i
+Thus every token-indexed J-lens direction is a mixture of the right singular modes vi : the singular
+value σi weights the strength of the corresponding coherent response channel, while ⟨ui , wq ⟩
+measures how strongly that channel’s downstream response aligns with the token’s unembedding
+direction. This connection matters because the J-space is operationally defined by approximating an
+activation as a sparse non-negative combination of the directions jq (Gurnee et al., 2026). The sparse
+decomposition therefore selects a small number of semantically labeled mixtures of the coherent
+modes that survive averaging. In this sense, the singular structure of JH supplies the underlying
+dynamical geometry, while the unembedding and sparse non-negative decomposition translate that
+geometry into the token-level “concepts” reported by the J-lens.
+
+1.2    FAMILIES OF JACOBIAN L ENSES
+
+Our analysis suggests that the Jacobian lens can be modified to extract different types of information.
+Here, we focus on the modulation of lag coherence selectivity. Eq. 7 highlights that averaging over
+time points is equivalent to a Fourier projection onto the zero-frequency mode. Modulating the ω
+parameter in this projection (or even generalizing to band-pass filtering) induces a family of lenses
+we call ω-J-lenses, where ω ∈ [−π, π] given the Nyquist limit for sampling frequency 1 / token. We
+demonstrate their selectivity in our toy task in Fig. 6.
+
+2     T OY M ODEL
+We designed a simple toy task to study the J-lens for models performing next-token prediction, and
+demonstrate its behavior on optimal Bayes filters as well as trained transformers. Our task, inspired
+
+
+                                                                                                          5
+Preprint
+
+
+
+
+by recent work studying how transformers learn to track hidden states (Shai et al., 2024), is a hidden
+Markov model (HMM) with several independent latent states X (i) , each arranged on a ring of ni
+discrete states: X (i) ∈ {0, 1, . . . , ni − 1}. We design the dynamics to be the simplest model that can
+selectively modulate each of the coherence factors via the task parameters. The dynamics of each
+latent state are (suppressing the latent index for clarity):
+                                           
+                                             Xt + v + Dt mod n w.p. λ
+                             Xt+1 =                                                                  (13)
+                                             Ut w.p. 1 − λ
+Here λ is called the state persistence parameter, Dt ∈ {−1, 0, 1} with probabilities q, 1 − 2q, q and
+Ut ∼ Uniform{0, . . . , n − 1}. We will see how changing λ modulates magnitude a by determining
+for how many positions a token is useful to estimate the state of the latents. The integer v is the
+velocity of the state on the ring, θ = 2πv/n is its angular velocity, and Dt is a diffusion term. Lag
+coherence measures whether a state drives all future states in the same way, and v modulates this
+by increasing misalignment across positions. With a fully observed state at all timepoints, however,
+the model is not forced to integrate over time (filtering), which would make the Jacobian 0 across
+all timepoints. To force integration, we reveal the states with probability ε, via another random
+variable Bt ∈ {0, 1}. Each latent state is combined into a token by concatenating   Q state index into an
+n-ary variable and converting that to a token index Yt , making a total of 1 + i ni tokens, where
+the additional token is a null token (states unobserved). In the following, we use three latents with
+ni ∈ {2, 8} for simplicity. We will show how this model setup allows us to selectively modulate the
+magnitude a (through λ) and lag coherence ρτ (through θ) of the Jacobian lens vectors. Note that
+this toy model is easily solved by a transformer, and indeed even the embeddings learn to represent
+the latent states. The main result of our analysis is that we can a priori predict the order of the modes
+and their approximate coherence parameters in the Jacobian lens of the transformer.
+
+2.1   I NTRODUCING CONTEXTUAL DEPENDENCY
+
+So far, all tokens across all random sequences for a given model are integrated the same way.
+This means that the context coherence ρc of the Jacobian lens vectors cannot be modulated. To
+introduce this, we add a new variable called a key state Wt ∈ {−1, +1} where the observed state
+Yt = Xt + n2 1(Wt−1 = −1), and P (Wt = 1) = (1 + ψ)/2, with key bias ψ ∈ [0, 1]. This state is
+always fully observed, forcing the models to look back one timestep to identify how to infer the state
+of the observed token at the present timestep. This directly modulates context coherence because
+it forces the read-in and read-out directions of a feature toQchange dependent on the context. Each
+keyed state has its own independent key, making (1 + 2 i ni ) 2|K| tokens, where K is the set of
+latents with keys.
+
+3     T HE BAYES F ILTER AND ITS JACOBIAN L ENS
+Prior work (Shai et al., 2024) has found that transformers trained on HMMs learned to represent
+optimal Bayesian beliefs of the hidden states in their residual stream. We follow this line of work
+by deriving the Bayes filter for the above HMM, its Jacobian lens, and then show that the Jacobian
+lens captures belief states ordered by their coherence parameters in the transformer as well. Because
+each state exists on a ring, we account for rotational symmetry by studying the Fourier modes
+ϕj (x) = e2πijx/n . The Bayes filter optimally integrates the given evidence into a belief state, which
+is defined as the expected value of a state given the history:
+                                    (j)
+                                  mt      := E[ϕj (Xt+1 ) | Y1 , . . . , Yt ]                       (14)
+                                   (j)
+                                  m0 := 0.                                                          (15)
+
+The belief state for a given Fourier mode of a given state is updated by unkeyed evidence as
+                                (j)                 (j)               
+                              mt = αj (1 − Bt )mt−1 + Bt ϕj (Xt )                                   (16)
+where αj = λcj eiθj , with θj = jθ the rotation of mode j per step and cj = 1 − 2q + 2q cos(2πj/n)
+the diffusion factor (Appendix E). This update rule is locally linear, either updating with the expected
+evolution operator αj if no evidence is observed, and replacing the state with the observation
+otherwise. The graphical model of the task and the Bayes filter are schematized in Fig. 3.
+
+
+                                                       6
+Preprint
+
+
+
+
+ a                                                                       b
+      Xt1− 1            Xt1          Xt1+ 1
+
+                                                                                                α                          α
+                                                    latents
+      Xt2− 1            Xt2          Xt2+ 1                                  mt − 1                 mt                         mt + 1   belief
+                                                    (rings)
+
+
+      Xt3− 1            Xt3          Xt3+ 1
+
+                                                                                      Bt                 Bt + 1                         reveal
+               Bt − 1         Bt              Bt + 1 reveal
+
+
+      Yt − 1            Yt           Yt + 1         token                                  Yt                     Yt + 1                token
+
+
+
+                                                    key
+      Wt − 1            Wt           Wt + 1
+                                                    (context sweep)
+
+
+                                                                                                             (i)
+Figure 3: Graphical models of the task (a) and the Bayes filter (b). (a) Three latents Xt evolve independently
+on their rings. The reveal variable Bt sets whether the token Yt shows the latents, and in the context sweep the
+key Wt−1 sets whether the shown state is flipped. (b) The belief mt is the previous belief mt−1 propagated by
+α, or, when Bt = 1, the revealed state from Yt propagated by α.
+
+3.1       K EYED F ILTERS
+
+Keyed states are observed differently, but the key state Wt−1 is directly observable at every token
+and is invertible. This means that the Fourier mode of the evidence is directly related to the state:
+ϕj (Yt ) = Wt−1 ϕj (Xt ). The Bayes filter can be similarly extended, as
+       (j)                (j)                                                             
+    mt = αj (1 − Bt )mt−1 + Bt 1(Wt−1 = 1)ϕj (Yt ) + Bt 1(Wt−1 = −1)Wt−1 ϕj (Yt )               (17)
+
+The first of the latter two terms accounts for the setting in which the key does not change the state,
+and the second accounts for the changed state by inverting the rotation to recover the state. This
+forces the predictive model to change where it reads in token information and writes to the predicted
+next token, thereby modulating the contextual coherence of the dynamics.
+
+3.2       T HE JACOBIAN L ENS
+
+In this section we derive the three factors of the J-lens for the Bayes filter (magnitude a(j) , lag
+             (j)                        (j)
+coherence ρτ and context coherence ρc ) and show how the task parameters set them. We focus on
+one latent and one Fourier mode j: the Jacobian of mode j of the belief at t + τ with respect to mode
+j of the evidence at the revealed source t, in context c,
+                                                                              (j)
+                                                                         ∂mt+τ
+                                                   Kj (c, τ ) =                   .
+                                                                        ∂ϕj (Xt )
+
+This object captures all of the dynamics, as the latents are independent and the filter acts on each
+Fourier mode separately. Thus the Jacobians between different latents or different modes are zero, and
+the lens is block diagonal, making each mode its own separate singular vector. The piecewise-linear
+components of the dynamics combine to form
+                                                              τ
+                                                              Y
+                                   Kj (c, τ ) = αjτ +1            (1 − Bt+k ) = αjτ +1 Aτ ,                                                  (18)
+                                                              k=1
+
+where the product is one if no evidence has been observed across all tokens from position t to t + τ ,
+and zero otherwise.
+Let rj := |αj | (1 − ε) be the memory of mode j across one step, where ε = P (Bt = 1), and
+let N (c) ≥ 1 be the number of tokens until the next reveal, so that P (N = k) = (1 − ε)k−1 ε.
+                           PH                                               Pmin(N −1,H) τ
+Summing over lags gives τ =1 Kj (c, τ ) = αj Sj,N (c) , where Sj,N :=          τ =1         αj is the
+response accumulated before the next reveal. This sum matches the lens of Eq. (1) up to the averaging
+factor 1/H, which scales every singular value equally and so leaves their order unchanged. For large
+
+
+                                                                    7
+Preprint
+
+
+
+
+H the three coherence parameters are (Appendix E.1)
+
+                                         |αj |rj
+                                   a(j) =        ,
+                                        1 − rj
+                                        (1 − rj ) Ec |Sj,N |
+                                   ρ(j)
+                                    τ =                      ,                                        (19)
+                                                   rj
+                                                        rj
+                                   ρ(j)
+                                    c = |ψ|           iθ
+                                                                     ,
+                                            |1 − rj e j | Ec |Sj,N |
+
+where Ec |Sj,N | is the series given in Eq. (43). When θj = 0, every term of Sj,N is real and positive,
+     (j)       (j)
+so ρτ = 1, ρc = |ψ| and the persistence λ changes only the magnitude a(j) . A nonzero angular
+velocity θ rotates successive terms of Sj,N so that they partly cancel, which lowers the lag coherence
+ (j)
+ρτ .
+
+
+3.3   C ONNECTION TO THE T RANSFORMER
+
+The Jacobian lens on the transformer is defined by WU JH , where WU is the unembedding matrix.
+Given that the activity after the unembedding layer maps to tokens via a softmax, the J-lens on the
+transformer studies the effect of perturbations on the log probabilities, rather than the probabilities
+of each state as in the Bayes filter. The difference on the Jacobian is a factor of ∂ log p(Xt ) =
+∂p(Xt )/p(Xt ), which is an effective reweighting by a positive factor. This reweighting, however,
+preserves the order of each factor (a, ρτ , ρc ), thus the qualitative ordering as predicted by the theory
+should transfer to the transformer.
+
+
+4     N UMERICAL R ESULTS
+
+In the following three sections, we first introduce the parameter that is modulated across multiple
+independent latent states in the HMM (three, across all sections) to induce selective changes in either
+magnitude a, lag coherence ρτ , or context coherence ρc . We then apply the Bayes filter to validate
+the analytical theory. Next, we train a two-layer decoder-only transformer (Vaswani et al., 2017) with
+residual dimension 128 and 4 heads per layer to predict the next token given the history (see Appendix
+F for further details). Our primary result is a validation that the Jacobian lens unsupervisedly identifies
+independent modes associated with the latent states, ordered by the selectively modulated coherence
+factor. To do so, we fit an encoding model that maps from the Fourier modes (two per latent state
+for sin and cos) of a latent to the residual stream, and compute the coherence parameters for these
+directions. We also compute the total cosine similarity between this encoding subspace and the
+Jacobian lens singular vectors vi (input side) and ui (output side) (Appendices G and H). We also
+repeat this process on decoding vectors. Finally, we show that we can predict the persistence λ∗0 at
+which two latents swap places, given different angular velocities θ.
+
+
+4.1   S ELECTIVELY MODULATING MAGNITUDE
+
+We first modulate the persistence λ by designing a hidden Markov model (HMM) with three latent
+states, each on a ring, with λ = 0.8, 0.9, 0.95 respectively. We set the latent state velocity v = 0,
+which holds ρτ and ρc fixed while selectively modulating the magnitude a of each latent (Fig. 4a).
+All models learn to predict the next token as well as the optimal Bayes filter (Fig. 4b). On the Bayes
+filter, the measured J-lens factors match the theory: the lens weight ||JH x||2 tracks the magnitude
+a, while ρτ and ρc stay fixed (Fig. 4c). The J-lens applied to the transformer has similar factors at
+each layer. As predicted, the J-lens directions identify latents in order of their magnitude a (Fig. 13).
+Across all seeds, this is true for both the input direction vi (the right singular vector of the J-lens,
+which reads in the residual stream at layer ℓ) and the output direction ui (the left singular vector,
+which writes to the output). The rank order predicted by the theory is validated on the Bayes filter
+and transformer (Figs. 11 and 12). The results are also consistent when utilizing decoding vectors for
+each latent, rather than encoding vectors (Fig. 14), albeit with slightly smaller alignment values.
+
+
+                                                    8
+Preprint
+
+
+
+
+        a persistence λ, one step                                                                                                 b
+
+                                                                                                                                                                                                                                     test
+
+
+
+
+                                                                                                                                  Bayes filter (nats / token)
+                                                                                                                                  test cross-entropy above
+                                                                                                                                                                0.20                                                                 train
+                                                                                                                                                                                                                                     Bayes filter
+                                                         w.p. λ                                           Xt                                                    0.15                                                                 no memory
+
+
+                                                                                                                                                                0.10
+
+
+                                                                                                                                                                0.05
+
+
+                                                                                                                                                                0.00
+                                   Xt − 1              w.p. 1 − λ
+
+                                                                                             Xt ∼ ℤn                                                                    0             5                              10             15             20
+                                                                                                                                                                                    training step (thousands)
+        c
+                                                                                                  Bayes filter                                           transformer, layer 0                  transformer, layer 1                            theory
+
+
+                           1.0                                              1.0                                                   1.0                                                                              1.0
+
+
+
+
+                                                                                                                                                                                             context coherence ρ
+                                                                                                               lag coherence ρτ
+        lens weight ‖Jv‖
+
+
+
+
+                           0.8                                              0.8                                                   0.8                                                                              0.8
+                                                              magnitude a
+
+
+
+
+                           0.6                                              0.6                                                   0.6                                                                              0.6
+
+                           0.4                                              0.4                                                   0.4                                                                              0.4
+
+                           0.2                                              0.2                                                   0.2                                                                              0.2
+
+                           0.0                                              0.0                                                   0.0                                                                              0.0
+                                 0.8           0.9     0.95                       0.8           0.9     0.95                                                    0.8           0.9     0.95                                0.8            0.9     0.95
+                                       persistence λ                                    persistence λ                                                                 persistence λ                                             persistence λ
+
+
+Figure 4: The J-lens captures the selective modulation of magnitude a in the Bayes filter and transformers.
+(a) Cartoon of the task feature that is modulated: a state Xt−1 on the ring is kept with probability λ (persistence),
+and sampled uniformly otherwise. (b) Learning curves for the transformer, in comparison to the optimal Bayes
+filter. (c) J-lens factors of each latent as a function of persistence λ: lens weight (the singular value a ρτ ρc ) and
+magnitude a, both relative to their largest value, then lag coherence ρτ and context coherence ρc . Open circles:
+Bayes filter. Blue circles and orange squares: transformer layers 0 and 1. Large markers show the mean across
+seeds and small markers show single seeds. Red line: theory (Eq. 19).
+
+4.2         S ELECTIVELY MODULATING LAG COHERENCE
+
+Next, we selectively modulated the lag coherence ρτ by changing the velocity v of each latent on the
+ring (Fig. 5a). We placed states on a ring of 8 indices, and selected three latents again with velocities
+v = 0 (perfectly coherent), 2, and 4 (maximally incoherent), that is, θ = 0, π/2, π. Our theory again
+predicts that the J-lens should identify these latents in order of their lag coherence ρτ . As in the prior
+section, we found that for transformers trained to optimality (Fig. 5b), this played out empirically
+across all seeds (Fig. 15). The lag coherence ρτ of the J-lens applied to the transformer on each latent
+separately was similarly modulated most by the velocity, while a and ρc were less sensitive (Fig.
+5c). Again, the results are also consistent when utilizing decoding vectors for each latent, rather than
+encoding vectors (Fig. 16).
+
+4.2.1                      ω- LENS FAMILY
+As described in Sec. 1.2, we also evaluated the ω-J-lenses on the lag coherence sweep for both
+transformer layers and the Bayes filter. We swept the ω parameter across the whole range, and found
+that it preferentially upweighted latent directions with lag coherence parameters (tuned via θ in the
+task) that maximally aligned with the ω (Fig. 6). This suggests that the ω-J-lens family can be used
+to selectively identify rapidly changing information across tokens (like syntax) or slowly changing
+information, by sweeping ω.
+
+4.3         S ELECTIVELY MODULATING CONTEXT COHERENCE
+
+Lastly, we selectively modulate context coherence ρc by introducing a key state to latent states
+with n = 2 states (Sec. 2.1). In this HMM, an observed state is flipped to the opposite state with
+probability (1 − ψ)/2. Holding all other parameters besides ψ fixed, the context coherence can be
+modulated independently, since ρc = ψ for the Bayes filter (Appendix F). We select ψi = 0, 0.75, 1,
+ranging from maximally incoherent (0) to coherent (1), and train a transformer on this 3-latent HMM.
+The J-lens factors of the Bayes filter match the theory, with ρc tracking ψ (Fig. 7). The Bayes filter
+J-lens identifies the latents in the predicted order, and the transformer does as well (Fig. 17).
+
+
+                                                                                                               9
+Preprint
+
+
+
+
+                                a                                                                                                                               b
+
+                                                                                                                                                                                              0.25
+                                                                                                                                                                                                                                                                  test
+
+
+
+
+                                                                                                                                                                Bayes filter (nats / token)
+                                                                                                                                                                test cross-entropy above
+                                                                                                                                                                                                                                                                  train
+                                      velocity v, one step                                                                                                                                    0.20
+                                                                                                                                                                                                                                                                  Bayes filter
+                                                         v=0                                                                   v=4                                                                                                                                no memory
+                                                                                   Xt                  v=2                                                                                    0.15
+
+                                                                    Xt − 1                                                                                                                    0.10
+                                                                    = Xt
+                                                                                                           Xt − 1        Xt              Xt − 1
+                                                                                                                                                                                              0.05
+
+                                                                                                                                                                                              0.00
+                                                         θ = 0°                    θ = 90°                                    θ = 180°
+
+                                                                                                                                                                                                        0             5                             10           15          20
+                                                                                                                                                                                                                     training step (thousands)
+                                c
+                                                                                                                                 Bayes filter                                          transformer, layer 0                   transformer, layer 1                      theory
+
+
+                                                   1.0                                               1.0                                                        1.0                                                                               1.0
+
+
+
+
+                                                                                                                                                                                                                            context coherence ρ
+                                                                                                                                             lag coherence ρτ
+                                lens weight ‖Jv‖
+
+
+
+
+                                                   0.8                                                                                                          0.8                                                                               0.8
+                                                                                       magnitude a
+
+
+                                                                                                     0.8
+
+                                                   0.6                                               0.6                                                        0.6                                                                               0.6
+
+                                                   0.4                                               0.4                                                        0.4                                                                               0.4
+
+                                                   0.2                                               0.2                                                        0.2                                                                               0.2
+
+                                                   0.0                                               0.0                                                        0.0                                                                               0.0
+                                                         0            90     180                               0          90         180                                                      0             90        180                                 0       90       180
+                                                     turn per token θ (degrees)                        turn per token θ (degrees)                                          turn per token θ (degrees)                                               turn per token θ (degrees)
+
+
+Figure 5: The J-lens captures the selective modulation of lag coherence ρτ in the Bayes filter and transform-
+ers. (a) The velocity v of the state along the ring, with angular velocity θ = 2πv/n, modulates lag coherence
+ρτ . (b) Learning curves of the transformer, as in Fig. 4. (c) J-lens factors as a function of angular velocity θ, as
+in Fig. 4.
+
+                                                                  Bayes filter                                                    transformer, layer 0                                                                                                   transformer, layer 1
+                          1.2                                                                                   150                                                                                                  17.5
+ω-J-lens singular value
+
+
+
+
+                          1.0                                                                                   125                                                                                                  15.0
+
+                                                                                                                                                                                                                     12.5
+                          0.8                                                                                   100
+                                                                                                                                                                                                                     10.0
+                          0.6                                                                                       75
+                                                                                                                                                                                                                      7.5
+                          0.4                                                                                       50
+                                                                      θ = 0°                                                                                                                                          5.0
+                          0.2                                         θ = 90°                                       25                                                                                                                             theory
+                                                                                                                                                                                                                      2.5
+                                                                      θ = 180°                                                                                                                                                                     measured
+                          0.0                                                                                        0                                                                                                0.0
+                                               -π         -π/2           0       π/2                   π                 -π       -π/2                          0                                 π/2            π            -π                         -π/2     0       π/2     π
+                                                             lens frequency ω                                                      lens frequency ω                                                                                                       lens frequency ω
+
+Figure 6: The ω-J-lens selectively upweights latent directions with lag coherences aligned with ω. Solid line
+indicates the theoretical curves (optimally rescaled from the Bayes filter theory to fit the transformers), points
+indicate real sampled data. Colors (denoting latent index) are determined by alignment with latent encoding
+direction.
+
+This lens is noisier than the previous analyses, potentially due to the increase in noise in the observed
+states added by the key variable. In both layers, several J-lens directions also align with patterns other
+than the latent belief states, mainly the reveal state Bt (whether or not the latent states are observed)
+of the present token and the key state Wt−1 (Fig. 19). This suggests that the J-lens can identify other
+important features in the latent space in an unsupervised fashion. The lens factors (Fig. 7c) show
+that both transformer layers compress the range of context coherence: ρc is much higher than in the
+Bayes filter for the incoherent latent (ψ = 0) and lower for the coherent ones. The high ρc at ψ = 0
+suggests that transformers may have a bias for extracting context-independent information from data.
+Finally, the results remain consistent when utilizing decoding vectors for each latent, rather than
+encoding vectors (Fig. 18).
+
+4.4                                 T HEORY PREDICTS THE CROSSING OF TWO LATENTS
+
+To further emphasize that our theory can predict the ordering of features in the J-lens, we show
+that our theory can predict when two latents are swapped in the Bayes filter, and that this predicted
+crossing point roughly translates to the transformer. We simulate an HMM with no keys here for
+
+
+                                                                                                                                          10
+Preprint
+
+
+
+
+      a key Wt − 1 (mean ψ)                                                                                            b
+
+                                 state Xt                                        observed Yt
+                                                                                                                                                     0.30                                                           test
+
+
+
+
+                                                                                                                       Bayes filter (nats / token)
+                                                                                                                       test cross-entropy above
+                                                                                                                                                                                                                    train
+                                                                                                                                                     0.25
+                                                                                                                                                                                                                    Bayes filter
+                                                   w.p. (1 + ψ)/2
+                                                                                                                                                     0.20                                                           no memory
+
+                                                                                                                                                     0.15
+
+                                                                                                                                                     0.10
+
+                                                                                                                                                     0.05
+
+                                                                                                                                                     0.00
+
+                                                   w.p. (1 − ψ)/2
+                                                                                                                                                            0          5                               10         15           20
+                                                                                                                                                                      training step (thousands)
+      c
+                                                                                        Bayes filter                                          transformer, layer 0               transformer, layer 1                     theory
+
+
+
+                             5                                                                                         1.0                                                                           1.0
+
+
+
+
+                                                                                                                                                                               context coherence ρ
+                                                                        3
+
+
+
+
+                                                                                                    lag coherence ρτ
+          lens weight ‖Jv‖
+
+
+
+
+                                                                                                                       0.8                                                                           0.8
+                                                          magnitude a
+
+                             4
+
+                             3                                          2                                              0.6                                                                           0.6
+
+                             2                                                                                         0.4                                                                           0.4
+                                                                        1
+                             1                                                                                         0.2                                                                           0.2
+
+                             0                                          0                                              0.0                                                                           0.0
+                                 0          0.75    1                       0          0.75    1                                                     0          0.75       1                                0           0.75   1
+                                     key mean ψ                                 key mean ψ                                                               key mean ψ                                             key mean ψ
+
+
+Figure 7: The J-lens captures the selective modulation of context coherence ρc in the Bayes filter and
+transformers. (a) For keyed features, the true state is revealed in the token with probability (1 + ψ)/2.
+Otherwise, the state is revealed inverted, so that ρc = ψ. (b) Learning curves of the transformer, as in Fig. 4. (c)
+J-lens factors as a function of key bias ψ, as in Fig. 4.
+
+simplicity. For two latents with angular velocities θ0 = 0 and θ1 , our theory predicts a persistence
+value λ∗0 for a given λ1 and θ1 , at which two latents swap order in the J-lens (Appendix E.1, Eq. (46)).
+On the Bayes filter, this theory plays out extremely cleanly (Fig. 8a,b) across a range of λ1 and
+θ1 values, with the theory exactly predicting the crossing point λ∗0 of two latents. Applied to the
+transformer, our results generalize with small bias (for λ ∈ [0, 1], as the difference in singular values
+σ0 − σ1 grows monotonically with λ0 , and the error is O(0.01)) and in opposite directions at each
+layer (Fig. 8c). Together, this suggests that even though the Bayes filter theory does not perfectly
+translate to the transformer, as expected, the predictions are still quite informative.
+
+5    D ISCUSSION
+
+We have shown that the Jacobian lens, as introduced by Gurnee et al. (2026), identifies modes in any
+temporally and spatially varying dynamical system that jointly maximize three different statistical
+features:
+
+Magnitude a. Magnitude measures how a state grows or shrinks across a ‘temporal’ dimension. In
+transformers, this growth is across layers, with depth exponent χ. However, this could be defined
+differently in other systems. Magnitude aligns most directly with the standard notion of a Lyapunov
+exponent, which typically measures growth across time in a dynamical system.
+
+Lag coherence ρτ . Lag coherence measures how a feature is modulated across ‘spatial’ lags τ . In
+transformers, this is measured across token positions, where a mode decays at rate µ and rotates at
+frequency θ. Cross-token dynamics in language models have previously been studied as multi-particle
+systems (Lu et al., 2019; Geshkovski et al., 2023), in which each token (particle) has a particular
+spatial position and interacts with others via self-attention. The most coherent spatial modes are those
+with zero spatial frequency and little decay (θ, µ ≈ 0). In Lyapunov theory, coherent directions relate
+to the measurement of hydrodynamic Lyapunov modes, which are exactly the spatially coherent
+Lyapunov vectors.
+
+Context coherence ρc . Context coherence measures how much the dynamics are modulated across
+different states or time periods. Roughly, maximizing context coherence identifies modes that are
+
+
+                                                                                                   11
+Preprint
+
+
+
+
+          a                                                                                                              b
+                               1.8
+                                             L0 (v=0)                                                                                                                               Eq. 40
+                               1.6           L1 (v=4)                                                                                0.9                                            Bayes filter lens
+                                             theory (large L)                                                                                                                       transformer, layer 0
+                               1.4
+
+
+       mode-1 singular value
+                                             Bayes filter lens                                                                                                                      transformer, layer 1
+
+
+
+
+                                                                                                                swit ch point λ 0*
+                                                                                                                                     0.8
+                               1.2           Eq. 40: λ0* = 0.649
+                               1.0
+                                                                                                                                     0.7
+                               0.8
+
+                               0.6                                                                                                   0.6
+                               0.4
+
+                               0.2                                                                                                   0.5
+
+                                       0.5           0.6            0.7           0.8       0.9          1.0                                  0             45             90             135            180
+                                                                 persistence λ0 of L0                                                                      turn per token θ1 of L1 (degrees)
+          c                           transformer, layer 0                                                                                  transformer, layer 1
+
+                               20
+                                                                                                                                     0.5
+                               15
+
+
+                               10                                                                                                    0.0
+       σL0 − σL1
+
+
+
+
+                                 5                                                                                              −0.5
+
+                                 0
+                                                                                                                                −1.0
+                               −5
+
+
+                                     −0.25   −0.20   −0.15       −0.10    −0.05   0.00   0.05     0.10   0.15                              −0.25   −0.20   −0.15   −0.10   −0.05   0.00    0.05   0.10     0.15
+                                                                    λ0 − λ0* (Eq. 40)                                                                                 λ0 − λ0* (Eq. 40)
+
+Figure 8: Predictive theory of crossing of latents in the J-lens. (a) Empirical singular values σ (circles) and
+analytically derived values in the large-H limit (line) for the J-lens applied to a Bayes filter with two latents (L0,
+L1). λ0 is swept for L0, while λ1 is held fixed for L1. Vertical dotted line denotes the predicted crossing point
+λ∗0 . (b) Predicted crossing point λ∗0 (Eq. (46)) and empirical crossing point (circles) as a function of the angular
+velocity θ1 of L1. (c) Difference in singular values σ0 − σ1 as a function of λ0 − λ∗0 , for the transformer trained
+on the same HMM as in (a). Vertical solid line denotes the mean crossing point across seeds, gray shading
+denotes standard deviation. Each curve is averaged over 4 variations of θ1 (circles in (b)).
+
+autonomous (ρc ≈ 1), which is to say independent with respect to the context. The transformer
+architecture is highly context-dependent, whereas autonomous dynamical systems are not. That the
+transformer learned features with much higher ρc than the Bayes filter for the context-incoherent
+latent (Fig. 7c) suggests that transformers might learn to modulate contextual information via context-
+independent dynamics, which could be a fundamental mechanism for symbolic processing. This
+further suggests that it may be viable to study transformers more generally as dynamical systems
+(Ostrow et al., 2024) just like recurrent neural networks (Sussillo & Barak, 2013).
+Our analysis explains a number of phenomena in the original J-lens paper (Gurnee et al., 2026). As
+described previously, high-magnitude, lag-coherent, and context-coherent directions do not have
+to be large variance (Corollary 1.1). This is commensurate with Gurnee et al. (2026) finding that
+the J-space is never more than 10% of activation variance. Lag coherence preference explains why,
+when Claude was asked to ‘concentrate on X while solving Y’ (Gurnee et al., 2026), the J-lens
+identified features corresponding to X, as these features would be prevalent and coherent across all
+token positions. A preference for contextually coherent directions explains why averaging identifies
+concepts that are broadly verbalizable, not specific to a single prompt.
+Our work aligns with other results in mechanistic interpretability (Shai et al., 2024) that study how toy
+transformers represent belief state geometry in their latent state and learn to decompose independent
+factors of the generative process into orthogonal subspaces (Shai et al., 2026). However, this work
+has generally relied on linear decoding of these belief states, which requires a priori knowledge of
+the optimal belief states at each timepoint. Our results here suggest that the J-lens could be a way
+to identify these belief states in an unsupervised manner, which would be effective for scaling to
+real-world behaviors.
+This analysis also suggests that a family of Jacobian lenses could be designed to capture different
+types of information within transformers. For example, local information could be emphasized by
+averaging over high-frequency Fourier modes, rather than low-frequency, as we showed in Fig. 6.
+This could be relevant for isolating and understanding fast-changing information, such as those
+on the level of syntax that change word-by-word. Contextually incoherent information could be
+isolated by identifying Jacobian modes that minimize context coherence ρc , rather than maximize it.
+
+
+                                                                                                                12
+Preprint
+
+
+
+
+Given recent work on estimating Jacobians from dynamical data (Eisen et al., 2026), the ω-J-lenses
+could productively be applied to biological neural data as well. Together, our results clarify the
+mathematical nature of the J-lens, which is necessary for such a useful and efficient interpretability
+tool.
+
+Limitations. Here, we only study toy models, in which the task was relatively easy to learn and the
+coherence parameters of the task were easily manipulable.
+
+R EFERENCES
+Bernard J. Baars. A Cognitive Theory of Consciousness. Cambridge University Press, 1988.
+Nora Belrose, Igor Ostrovsky, Lev McKinney, Zach Furman, Logan Smith, Danny Halawi, Stella
+  Biderman, and Jacob Steinhardt. Eliciting latent predictions from transformers with the tuned lens.
+  arXiv preprint arXiv:2303.08112, 2023.
+Giancarlo Benettin, Luigi Galgani, Antonio Giorgilli, and Jean-Marie Strelcyn. Lyapunov Char-
+  acteristic Exponents for smooth dynamical systems and for hamiltonian systems; a method for
+  computing all of them. Part 1: Theory. Meccanica, 15(1):9–20, March 1980. ISSN 1572-9648.
+  doi: 10.1007/BF02128236. URL https://doi.org/10.1007/BF02128236.
+Ilias Chalkidis, Abhik Jana, Dirk Hartung, Michael Bommarito, Ion Androutsopoulos, Daniel Martin
+   Katz, and Nikolaos Aletras. LexGLUE: A benchmark dataset for legal language understanding
+   in English. In Proceedings of the 60th Annual Meeting of the Association for Computational
+   Linguistics, pp. 4310–4330, 2022.
+Yulong Chen, Yang Liu, Liang Chen, and Yue Zhang. DialogSum: A real-life scenario dialogue
+  summarization dataset. In Findings of the Association for Computational Linguistics: ACL-IJCNLP
+  2021, pp. 5062–5074, 2021.
+Karl Cobbe, Vineet Kosaraju, Mohammad Bavarian, Mark Chen, Heewoo Jun, Lukasz Kaiser,
+  Matthias Plappert, Jerry Tworek, Jacob Hilton, Reiichiro Nakano, Christopher Hesse, and John
+  Schulman. Training verifiers to solve math word problems. arXiv preprint arXiv:2110.14168,
+  2021.
+Stanislas Dehaene, Michel Kerszberg, and Jean-Pierre Changeux. A neuronal model of a global
+  workspace in effortful cognitive tasks. Proceedings of the National Academy of Sciences, 95(24):
+  14529–14534, 1998.
+Robert J. Deissler and Kunihiko Kaneko. Velocity-dependent Lyapunov exponents as a measure of
+  chaos for open-flow systems. Physics Letters A, 119(8):397–402, 1987.
+Tim Dettmers, Mike Lewis, Younes Belkada, and Luke Zettlemoyer. LLM.int8(): 8-bit matrix
+  multiplication for transformers at scale. In Advances in Neural Information Processing Systems,
+  volume 35, 2022.
+Jean-Pierre Eckmann and Omri Gat. Hydrodynamic Lyapunov modes in translation-invariant systems.
+  Journal of Statistical Physics, 98(3):775–798, 2000.
+Jean-Pierre Eckmann and David Ruelle. Ergodic theory of chaos and strange attractors. Reviews of
+  Modern Physics, 57(3):617–656, 1985.
+Adam J Eisen, Mitchell Ostrow, Sarthak Chandra, Leo Kozachkov, Earl Miller, and Ila Fiete. Char-
+  acterizing control between interacting subsystems with deep jacobian estimation. Advances in
+ Neural Information Processing Systems, 38:51361–51406, 2026.
+Rainer Engelken, Fred Wolf, and L. F. Abbott. Lyapunov spectra of chaotic recurrent neural
+  networks. Phys. Rev. Res., 5:043044, Oct 2023. doi: 10.1103/PhysRevResearch.5.043044. URL
+  https://link.aps.org/doi/10.1103/PhysRevResearch.5.043044.
+Borjan Geshkovski, Cyril Letrouit, Yury Polyanskiy, and Philippe Rigollet. A mathematical perspec-
+  tive on Transformers. arXiv preprint arXiv:2312.10794, 2023.
+
+
+                                                 13
+Preprint
+
+
+
+
+Wes Gurnee, Nicholas Sofroniew, Adam Pearce, Mateusz Piotrowski, Isaac Kauvar, Runjin Chen,
+ Anna Soligo, Paul Bogdan, Euan Ong, Rowan Wang, Ben Thompson, David Abrahams, Subhash
+ Kantamneni, Emmanuel Ameisen, Joshua Batson, and Jack Lindsey. Verbalizable representations
+ form a global workspace in language models. arXiv preprint arXiv:2607.15495, 2026.
+Danny Halawi, Jean-Stanislas Denain, and Jacob Steinhardt. Overthinking the truth: Understanding
+  how language models process false demonstrations. In International Conference on Learning
+  Representations, 2024.
+Karl Moritz Hermann, Tomáš Kočiský, Edward Grefenstette, Lasse Espeholt, Will Kay, Mustafa
+  Suleyman, and Phil Blunsom. Teaching machines to read and comprehend. In Advances in Neural
+  Information Processing Systems, volume 28, 2015.
+Kenfack Jiotsa, Aurelien Jiotsa, Antonio Politi, and Alessandro Torcini. Convective Lyapunov
+  spectra. Journal of Physics A: Mathematical and Theoretical, 46(25):254013, 2013. doi: 10.1088/
+ 1751-8113/46/25/254013.
+Ilya Loshchilov and Frank Hutter. Decoupled weight decay regularization. In International Confer-
+   ence on Learning Representations, 2019.
+Shuai Lu, Daya Guo, Shuo Ren, Junjie Huang, Alexey Svyatkovskiy, Ambrosio Blanco, Colin
+  Clement, Dawn Drain, Daxin Jiang, Duyu Tang, Ge Li, Lidong Zhou, Linjun Shou, Long Zhou,
+  Michele Tufano, Ming Gong, Ming Zhou, Nan Duan, Neel Sundaresan, Shao Kun Deng, Shengyu
+  Fu, and Shujie Liu. CodeXGLUE: A machine learning benchmark dataset for code understanding
+  and generation. In Proceedings of the Neural Information Processing Systems Track on Datasets
+  and Benchmarks, 2021.
+Yiping Lu, Zhuohan Li, Di He, Zhiqing Sun, Bin Dong, Tao Qin, Liwei Wang, and Tie-Yan Liu.
+  Understanding and improving Transformer from a multi-particle dynamic system point of view.
+  arXiv preprint arXiv:1906.02762, 2019.
+Yev Meyer, Marjan Emadi, Dhruv Nathawani, Lipika Ramaswamy, Kendrick Boyd, Maarten
+  Van Segbroeck, Matthew Grossman, Piotr Mlocek, and Drew Newberry. Synthetic-text-to-
+  SQL: A synthetic dataset for training language models to generate SQL queries from natural
+  language prompts. https://huggingface.co/datasets/gretelai/synthetic_
+  text_to_sql, 2024.
+nostalgebraist. interpreting GPT: the logit lens. LessWrong, https://www.lesswrong.com/
+  posts/AcKRB8wDpdaN6v6ru/interpreting-gpt-the-logit-lens, 2020.
+Valery I. Oseledets. A multiplicative ergodic theorem. Lyapunov characteristic numbers for dynamical
+  systems. Transactions of the Moscow Mathematical Society, 19:197–231, 1968.
+Mitchell Ostrow, Adam Eisen, and Ila Fiete. Delay embedding theory of neural sequence models.
+ arXiv preprint arXiv:2406.11993, 2024.
+Koyena Pal, Jiuding Sun, Andrew Yuan, Byron C. Wallace, and David Bau. Future lens: Antici-
+  pating subsequent tokens from a single hidden state. In Proceedings of the 27th Conference on
+  Computational Natural Language Learning (CoNLL), 2023. doi: 10.18653/v1/2023.conll-1.37.
+Keiran Paster, Marco Dos Santos, Zhangir Azerbayev, and Jimmy Ba. OpenWebMath: An open
+  dataset of high-quality mathematical web text. In International Conference on Learning Represen-
+  tations, 2024.
+Abigail See, Peter J. Liu, and Christopher D. Manning. Get to the point: Summarization with
+  pointer-generator networks. In Proceedings of the 55th Annual Meeting of the Association for
+ Computational Linguistics, pp. 1073–1083, 2017.
+Adam Shai, Loren Amdahl-Culleton, Casper L. Christensen, Henry R Bigelow, Fernando Rosas,
+ Alexander Boyd, Eric A. Alt, Kyle J Ray, and Paul M. Riechers. Transformers learn factored
+  representations. In Forty-third International Conference on Machine Learning, 2026. URL
+  https://openreview.net/forum?id=flDGB9On0h.
+
+
+                                                14
+Preprint
+
+
+
+
+Adam S Shai, Sarah E Marzen, Lucas Teixeira, Alexander G Oldenziel, and Paul M Riechers. Trans-
+  formers represent belief state geometry in their residual stream. Advances in Neural Information
+  Processing Systems, 37:75012–75034, 2024.
+Charles M. Stein. Estimation of the mean of a multivariate normal distribution. The Annals of
+  Statistics, 9(6):1135–1151, 1981.
+Jianlin Su, Murtadha Ahmed, Yu Lu, Shengfeng Pan, Wen Bo, and Yunfeng Liu. RoFormer: Enhanced
+   transformer with rotary position embedding. Neurocomputing, 568:127063, 2024.
+Mingjie Sun, Xinlei Chen, J. Zico Kolter, and Zhuang Liu. Massive activations in large language
+ models. In Conference on Language Modeling (COLM), 2024.
+David Sussillo and Omri Barak. Opening the black box: low-dimensional dynamics in high-
+  dimensional recurrent neural networks. Neural Computation, 25(3):626–649, 2013.
+Don Tuggener, Pius von Däniken, Thomas Peetz, and Mark Cieliebak. LEDGAR: A large-scale
+  multi-label corpus for text classification of legal provisions in contracts. In Proceedings of the
+ Twelfth Language Resources and Evaluation Conference, pp. 1235–1241, 2020.
+Lewis Tunstall, Leandro von Werra, and Thomas Wolf. Natural Language Processing with Trans-
+  formers. O’Reilly Media, 2022.
+Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez,
+  Łukasz Kaiser, and Illia Polosukhin. Attention is all you need. In Advances in Neural Information
+  Processing Systems, volume 30, 2017.
+Chris Wendler, Veniamin Veselovsky, Giovanni Monea, and Robert West. Do llamas work in English?
+  on the latent language of multilingual transformers. In Proceedings of the 62nd Annual Meeting of
+  the Association for Computational Linguistics (ACL), 2024.
+Wikimedia Foundation. Wikimedia downloads: Wikipedia dump of 2023-11-01. https://dumps.
+ wikimedia.org, 2023.
+Shi-Qi Yan, Kai-Xuan Ding, Chao-Hong Tan, Qian Chen, Wen Wang, Xiangang Li, and Zhen-Hua
+  Ling. Short horizons and sparse concepts: a mathematical view of the readout in the J-lens. arXiv
+  preprint arXiv:2608.25347, 2026.
+
+
+A     JACOBIAN SINGULAR VALUES UNDER AVERAGING
+Fix U, V and singular values sj = e−βj for j = 1, . . . , d, with S = diag(s1 , . . . , sd ). For each
+sample i = 1, . . . , N , draw a random permutation Pi and set
+                                            Xi = U Pi SPi⊤ V ⊤ .                                 (20)
+                                             −β   −2β        −βd
+Every Xi has the same singular values e , e   ,...,e    . Since U, V are shared,
+                          1  X             1 X          
+                   X̄ =          Xi = U          Pi SPi⊤ V ⊤ = U S̄V ⊤ ,                         (21)
+                          N i               N i
+
+so the singular values of X̄ are the diagonal entries of S̄,
+                                                  1 X
+                                        S̄kk =           sπi (k) .                               (22)
+                                                 N i
+
+Each sπi (k) is a uniform draw from {s1 , . . . , sd }, so
+                                        d
+                                     1 X −βj                         Var(s) N →∞
+                  E S̄kk = s̄ =            e ,          Var S̄kk =          −−−−→ 0.             (23)
+                                     d j=1                             N
+
+Every singular value of X̄ therefore converges to the same value s̄. Each Xi has the decaying
+spectrum e−βk , but the mean X̄ has a flat spectrum: X̄ → s̄ U V ⊤ .
+
+
+                                                     15
+Preprint
+
+
+
+
+B       R EAL JACOBIANS OF LLM S
+
+For each model, we computed per-token Jacobians of the residual stream on 96 text prompts drawn
+from 16 public datasets, six prompts each, all from Hugging Face:
+
+          • Wikipedia, 2023-11-01 dump, in English, Russian, Arabic, Chinese, Japanese and Swahili
+            (wikimedia/wikipedia; Wikimedia Foundation, 2023);
+          • Python code from CodeParrot-clean (codeparrot/codeparrot-clean; Tunstall
+            et al., 2022);
+          • JavaScript functions from the CodeXGLUE         code-to-text                  benchmark
+            (google/code_x_glue_ct_code_to_text; Lu et al., 2021);
+          • SQL schemas with queries from Gretel’s synthetic text-to-SQL                      dataset
+            (gretelai/synthetic_text_to_sql; Meyer et al., 2024);
+          • mathematical web text from OpenWebMath (open-web-math/open-web-math;
+            Paster et al., 2024);
+          • grade-school math word problems with worked solutions from GSM8K (openai/gsm8k;
+            Cobbe et al., 2021);
+          • dialogues from DialogSum (knkarthick/dialogsum; Chen et al., 2021);
+          • news articles from CNN/DailyMail, version 3.0.0 (abisee/cnn_dailymail; Hermann
+            et al., 2015; See et al., 2017);
+          • poems (merve/poetry)1 ;
+          • contract clauses from LEDGAR, via LexGLUE (coastalcph/lex_glue; Tuggener
+            et al., 2020; Chalkidis et al., 2022);
+          • recipes (corbt/all-recipes)2 .
+
+Prompts were drawn at random, with a fixed seed, from the first 200 training examples of each dataset.
+Only texts of at least 400 characters were kept, and each was truncated to its first 57 tokens. We
+computed the exact Jacobian from the middle block of all models to the last block, one token ahead:
+
+                                              (c)
+                                           ∂ hL−1 (t + 1)
+                                  Jc,t =            (c)
+                                                            ∈ Rd×d .                             (24)
+                                              ∂ hℓ (t)
+Jacobians were computed by reverse-mode differentiation, with float32 weights and eager attention,
+giving N = 96 × 8 = 768 matrices per model. The mean Jacobian is their element-wise average,
+                                                1 X
+                                           J¯ =       Jc,t .                                     (25)
+                                                N c,t
+
+where c denotes context and t denotes position in the text. To visualize the distribution of these
+matrices, we computed each Jacobian’s top 100 singular values, suppressing the rest as they may be
+noisy. We rescaled the singular value distribution by taking a logarithm, so that lower values can
+contribute in dimensionality reduction, and normalized the distribution for all Jacobians. We then fit
+and applied PCA to the individual Jacobians, then projected the mean Jacobian into this space.
+
+
+C       T HE SHARED - MODE MODEL
+
+This appendix provides the averaging steps and assumptions behind the shared-mode model of
+Eq. (5).
+    1
+        https://huggingface.co/datasets/merve/poetry
+    2
+        https://huggingface.co/datasets/corbt/all-recipes
+
+
+                                                     16
+Preprint
+
+
+
+
+                                                                gemma-3-1b-pt                                                  Llama-3.2-3B
+                                                                               α = 0.53                                                    α = 0.47
+                                                                               α = 0.34                                                    α = 0.27
+
+
+
+
+                                    normalised σk
+
+
+
+
+                                                                                                normalised σk
+                                                    10−1
+                                                                                                                10−1
+
+
+                                                                     individual Jacobians
+                                                                     mean Jacobian
+                                                    10−2
+
+                                                              100      101       102                                     100        101       102
+                                                                      index k                                                       index k
+
+                                                                    Qwen3.5-9B                                                 Qwen3-14B
+                                                                               α = 0.53                                                    α = 0.57
+                                                                               α = 0.36                                                    α = 0.33
+
+                                    normalised σk
+
+
+
+
+                                                                                                normalised σk
+                                                    10−1                                                        10−1
+
+
+
+
+                                                              100      101       102                                     100        101       102
+                                                                      index k                                                       index k
+
+Figure 9: Jacobian singular value spectra of four LLMs, with estimated power laws. Individual Jacobian
+curve is averaged over all points in Fig. 1, with shading denoting standard deviation.
+
+            a                                                                                          b
+                        gemma-2-2b                                  Llama-3.2-3B                                               gemma-2-2b                  Llama-3.2-3B
+
+                        individual Jacobians
+                PC 2
+
+
+
+
+                                                       PC 2
+
+
+
+
+                                                                                                                  PC 2
+
+
+
+
+                                                                                                                                                    PC 2
+                       mean Jacobian
+
+
+
+
+                             PC 1                                       PC 1                                                        PC 1                         PC 1
+
+                         Qwen3.5-9B                                 Qwen3-14B                                                  Qwen3.5-9B                  Qwen3-14B
+                PC 2
+
+
+
+
+                                                       PC 2
+
+
+
+
+                                                                                                                  PC 2
+
+
+
+
+                                                                                                                                                    PC 2
+
+
+
+
+                             PC 1                                       PC 1                                                        PC 1                         PC 1
+
+
+Figure 10: Low-dimensional projection of the left and right singular vectors of Jacobians. The top 100 left
+and right singular vectors, ranked by singular values as in Fig.
+                                                             q 1,Pare projected into two dimensions by computing
+the subspace distance on Grassmannians ||Pi − Pj ||F = 2 k sin2 θk , where θk are the principal subspace
+angles and Pi is the projector matrix defined by the singular vectors, Pi = Ui UiT . This pairwise distance matrix
+is reduced to two dimensions and visualized with PCA. (a) Left singular vectors. (b) Right singular vectors.
+
+Averaging. The shared component has singular strengths eT χi +τ µi . Suppressing ℓ in the notation,
+averaging gives
+                                                                           X
+        JH = SH + Ec Rc ,                                            SH =      gi ui vi∗ ,
+                                                                                                                                                             i
+                        H−1
+               1        X
+           Rc =       R(c, ℓ, τ ),                                                                                                                  gi = eT χi fH (γi ),   (26)
+               H τ =0
+                 H−1
+                                (1 − eHγ )/(H(1 − eγ )), eγ ̸= 1,
+                             
+               1 X τγ
+      fH (γ) =        e =
+               H τ =0           1,                       eγ = 1.
+
+The shared singular strengths after averaging are |gi |. Assume bounded accumulated depth growth
+and non-growing lag dynamics:
+
+                                                                        T χi ≤ Γ,                               µi ≤ 0,
+                                                                                       Γ                                        2                                          (27)
+                                                    ∥SH ∥2 = M ≤ e ,                                            Ec ∥Rc ∥2 ≤ M 2 .
+
+                                                                                           17
+Preprint
+
+
+
+
+These assumptions prevent the context-specific response from having arbitrarily greater magnitude
+than the shared response scale. Spectral dominance additionally requires shared strengths above the
+averaged remainder, as shown in Eq. (8).
+
+Overlap of context-specific responses. For a unit input perturbation v and independent context
+draws c, c′ ,
+                                2
+                    ∥(Ec Rc )v∥2 = v ∗ Ec,c′ [Rc∗ Rc′ ]v = Ec,c′ ⟨Rc v, Rc′ v⟩.           (28)
+Here ⟨A, B⟩F = tr(A∗ B) and ∗ denotes conjugate transpose. Thus growth is the expected Frobenius
+overlap of the Jacobians restricted to the same input direction. The unprojected overlap ⟨Rc , Rc′ ⟩F
+sums over input directions instead.
+                           R ∗
+Write Rc = j sR       R
+             P
+                  cj ucj (vcj ) , using s, u, v for singular values, output directions, and input direc-
+tions. Then                           X
+                                                       ∗ R      R ∗          R ∗ R
+                   ⟨Rc v, Rc′ v⟩ =        sR    R
+                                            cj sc′ k (v vcj )((vc′ k ) v) ((ucj ) uc′ k ) .        (29)
+                                      j,k
+                                          |  {z    } |       {z         } |    {z      }
+                                         magnitude        input alignment     output alignment
+
+                                                               2
+The bound sup∥v∥=1 Ec,c′ |⟨Rc v, Rc′ v⟩| ≤ η Ec ∥Rc ∥2 used in Eq. (8) therefore requires that, on
+average, the input or output directions of the context-specific modes are poorly aligned across
+contexts.
+
+Response-scale bound.       Since ∥JH v∥ = ρc (v) ρτ (v) a(v) and a(v) ≤ Ec,τ ∥K(c, ℓ, τ )∥2 for a
+unit input v,
+                             ∥JH v∥ ≤ ρc (v) ρτ (v) Ec,τ ∥K(c, ℓ, τ )∥2 .                          (30)
+At a fixed response scale, a direction’s contribution to the lens is therefore capped by the product of
+its two coherences.
+
+
+D    P ROOF OF C OROLLARY 1.1
+
+Proof. Let e1 , e2 be orthonormal directions, and consider the linear response model
+                        K(c, ℓ, τ ) = s (e1 e∗1 + ξc (−1)τ e2 e∗2 ) ,           s > 0,
+where ξc takes values ±1 with equal probability. The first direction is perfectly coherent across
+contexts and constant across future lags; the second changes sign across contexts and oscillates
+rapidly across lags. Thus
+                                          H−1
+                                       1 X
+                             JH = Ec           K(c, ℓ, τ ) = s e1 e∗1 .
+                                       H τ =0
+
+The unique nonzero singular value is s, and its input direction is e1 .
+Independently, choose centered input activations, independent of ξc , with covariance
+                                  C = β e1 e∗1 + e2 e∗2 ,            β > 0.
+These responses are realized by the context-dependent linear maps h 7→ K(c, ℓ, τ )h. The fraction of
+activation variance captured by projection onto the selected direction is
+                                 e∗1 Ce1    β
+                                         =     −→ 0                as β → 0.
+                                  tr C     1+β
+Interchanging the two covariance eigenvalues makes this fraction approach 1, without changing the
+Jacobians, their coherence or slowness, or the singular values of JH .
+By (12), every nonzero token-indexed J-lens direction in this example is proportional to e1 . Hence
+even the full span of the J-lens directions can capture arbitrarily little activation variance. Jacobian
+averaging favors coherent, slowly varying responses, weighted by their response magnitudes. Those
+properties do not require the corresponding activations to have large variance.
+
+
+                                                     18
+Preprint
+
+
+
+
+E     BAYES FILTER DERIVATIONS
+Any distribution p on Zn is defined by its modes Ep ϕj (X):
+                                                         n−1
+                                                      1X
+                                          p(x) =            Ep [ϕj (X)] ϕj (x).                                     (31)
+                                                      n j=0
+Lemma E.1 (Expected dynamic). For j ̸= 0,
+    E[ϕj (Xt+1 ) | Xt ] = αj ϕj (Xt ),               αj := λ cj eiθj ,          cj := 1 − 2q + 2q cos(2πj/n). (32)
+
+Proof. The expectation of a mode is Eϕj = n1
+                                                              P
+                                                                  y ϕj (y) = 0. One update step gives
+
+                                     ϕj (Xt + v + Dt ) = ϕj (Xt ) eiθj e2πijDt /n                                   (33)
+and                                                                    
+                             Ee2πijDt /n = 1 − 2q + q e2πij/n + e−2πij/n = cj .                                     (34)
+
+
+
+E.1     D ERIVATION OF THE J- LENS FACTORS
+
+We use the notation of Section 3.2: Kj (c, τ ) = αjτ +1 Aτ , rj = |αj | (1 − ε), and N (c) the number of
+tokens until the next reveal, with P (N = k) = (1 − ε)k−1 ε. Then Aτ = 1 for τ < N and 0 from N
+onward, so Ec Aτ = (1 − ε)τ .
+
+                                                τ +1
+Magnitude.      Since |Kj (c, τ )| = |αj |             Aτ ,
+                                                      H
+                                                      X                    rj (1 − rjH )
+                                      a(j) = |αj |           rjτ = |αj |                 .                          (35)
+                                                      τ =1
+                                                                              1 − rj
+
+Lag coherence.         For one mode, the lag coherence is
+                                                    PH
+                                              Ec H1 τ =1 Kj (c, τ )
+                                     ρ(j)
+                                      τ :=       1
+                                                   PH                  ,                                            (36)
+                                              Ec H   τ =1 |Kj (c, τ )|
+whose denominator is a(j) /H. Summing the Jacobian over lags,
+                         H                                                         min(N −1,H)
+                         X                                                            X
+                                Kj (c, τ ) = αj Sj,N (c) ,               Sj,N :=                 αjτ ,              (37)
+                         τ =1                                                         τ =1
+where Sj,N is the update accumulated over the steps until the state is next revealed. The lag coherence
+is therefore
+                                  |αj | Ec |Sj,N |   (1 − rj )Ec |Sj,N |
+                            ρ(j)
+                             τ =        PH         =                      ,                        (38)
+                                  |αj | τ =1 rj τ        rj (1 − rjH )
+where the expectation over the reveal time has the closed form
+                                           H
+                                           X
+                        Ec Sj,N (c) =            (1 − ε)k−1 ε |Sj,k | + (1 − ε)H |Sj,H+1 | .                        (39)
+                                           k=1
+
+Context coherence.            The mean of the accumulated response is
+                      H                       H
+                      X                       X                 τ                           rj 1 − (rj eiθj )H
+      Ec Sj,N (c) =          αjτ (1 − ε)τ =           rj eiθj        ,      Ec Sj,N (c) =                       .   (40)
+                      τ =1                    τ =1
+                                                                                                |1 − rj eiθj |
+The context coherence
+                                     PH
+                                Ec     τ =1 Kj (c, τ )          |Ec Sj,N |     rj 1 − (rj eiθj )H
+                 ρ(j)
+                  c :=                                    =                =                                        (41)
+                                     PH                         Ec |Sj,N |   |1 − rj eiθj | Ec |Sj,N |
+                               Ec      τ =1 Kj (c, τ )
+
+follows by dividing Eq. (40) by Eq. (39).
+
+
+                                                                19
+Preprint
+
+
+
+
+Long-window limit. Since |αj | = λ|cj | < 1, the accumulated responses are bounded, |Sj,k | ≤
+|αj |/(1 − |αj |), so the boundary term (1 − ε)H |Sj,H+1 | in Eq. (39) and the factors rjH in Eqs. (35),
+(38), (40) and (41) vanish geometrically as H → ∞. The magnitude and the mean accumulated
+response become
+                                      |αj | rj                  rj eiθj
+                              a(j) =           ,  Ec Sj,N =               ,                         (42)
+                                      1 − rj                  1 − rj eiθj
+and, substituting Sj,k = αj (1 − αjk−1 )/(1 − αj ) into Eq. (39),
+                                                          ∞
+                                                 ε |αj | X
+                                Ec |Sj,N | =               (1 − ε)k 1 − αjk .                          (43)
+                                               |1 − αj |
+                                                         k=0
+
+                     (j)                                (j)                              
+The coherences are ρτ = (1 − rj ) Ec |Sj,N |/rj and ρc = rj / |1 − rj eiθj | Ec |Sj,N | . For general
+θj , the modulus |1 − αjk | prevents a closed form for Eq. (43), but it cancels from their product and
+from the singular value of Eq. (11),
+                         1 − rj                                                        |αj | rj
+           ρ(j) (j)
+            τ ρc =                   ,     σ (j) := a(j) ρ(j) (j)
+                                                          τ ρc = |αj | Ec Sj,N =                   ,   (44)
+                      |1 − rj eiθj |                                                |1 − rj eiθj |
+so only the split of σ (j) between lag and context coherence requires the series. The split is closed when
+αj is real. Then 1 − αjk > 0 for all k, so Sj,k has the sign of αj for every k and Ec |Sj,N | = |Ec Sj,N |.
+                                                                       (j)   (j)
+For a static latent (θ = 0), Ec |Sj,N | = rj /(1 − rj ) and ρτ = ρc = 1: the singular value
+                                                                                       (j)
+is pure magnitude. For an alternating mode (θj = π), Ec |Sj,N | = rj /(1 + rj ), ρc = 1 and
+  (j)
+ρτ = (1 − rj )/(1 + rj ): the context coherence is perfect, and the lag coherence carries the whole
+loss from rotation. For intermediate θj both coherences are below one, with their product fixed by
+Eq. (44).
+
+Singular-value switching. For the Bayes filter in belief units, the latents are independent and share
+only the reveal, so the lens is block diagonal over latents (Section 3.2) and each latent’s mode j
+contributes a degenerate pair of singular values equal to σ (j) . Singular values of different latents
+therefore cross rather than avoid each other, and the top direction of the lens switches from one latent
+to the other exactly where their singular values are equal. Compare two latents, labeled 0 and 1 as in
+Fig. 8, on mode j = 1, which carries the largest singular value here. We fix j = 1 and index by latent
+i instead: αi = λi c1 eiθi , ri = (1 − ε)|αi |, and σi is the corresponding singular value. Here c1 is the
+diffusion factor of mode j = 1, shared by both latents. By Eq. (44), the switch occurs when
+                                            |α0 |2           |α1 |2
+                                                   iθ
+                                                        =                .                             (45)
+                                         |1 − r0 e |  0   |1 − r1 eiθ1 |
+Take latent 0 static (θ0 = 0) with its persistence λ0 swept, and latent 1 fixed. Let κ := σ1 /(1 − ε) =
+|α1 |2 /|1 − r1 eiθ1 |. Then Eq. (45) is the quadratic |α0 |2 + (1 − ε)κ |α0 | − κ = 0, whose positive root
+gives the critical persistence
+                                        1 hp                                  i
+                               λ∗0 =          (1 − ε)2 κ2 + 4κ − (1 − ε)κ .                            (46)
+                                      2c1
+This closed form needs θ0 = 0; otherwise the equation is quartic and has no simple root. The singular
+value σ0 rises monotonically from 0 with λ0 . The static latent therefore takes the top direction for
+λ0 > λ∗0 and loses it below, and a switch exists within the sweep whenever σ0 |λ0 =1 > σ1 . The
+rotating latent’s handicap enters only through |1 − r1 eiθ1 |, the inverse of its product of coherences up
+to the factor 1 − r1 , which is smallest for θ1 = 0 and grows with |θ1 | up to π. A faster-turning latent
+is thus overtaken at a lower λ∗0 .
+
+F    T RANSFORMER T RAINING M ETHODS
+Each model is a standard decoder-only transformer with causal self-attention and rotary position
+embeddings (RoPE; Su et al., 2024) applied to the queries and keys only during attention. The
+vocabulary size V is defined by the HMM: V = 83 + 1 = 513 for three latents on rings of 8 (every
+
+
+                                                       20
+Preprint
+
+
+
+
+combination of revealed places, plus the null token) and V = (1 + 2 · 23 ) 23 = 136 for the context
+sweep (null or plain or keyed reveal of three ±1 latents, times the three key bits).
+We write hℓ,t ∈ Rd for the residual stream at position t before block ℓ + 1: h0,t is the token
+embedding, h1,t the stream between the two blocks, and h2,t the output of the last block (so L = 2),
+which the final LayerNorm and WU read. The J-lens is read at ℓ = 0 and ℓ = 1.
+We trained each model with cross-entropy on next-token prediction, with AdamW (Loshchilov &
+Hutter, 2019) for 20,000 steps with learning rate 10−3 and weight decay 0.01, on uniform batches of
+64 sequences. We compared it with two references: the Bayes filter, which is the optimal predictor,
+and a memoryless predictor that uses the stationary distribution of the process.
+
+F.1   DATA FOR ALL SWEEPS
+
+For each sweep and seed we draw 500,000 training sequences of 192 tokens from the respective
+HMM process, and 200 test sequences. All sweeps use a reveal probability of ε = 0.2. We ran 8
+model seeds per task, jittering task parameters for each seed around a fixed mean. For the magnitude
+sweep, we set the number of states per latent n = 8, velocity v = 0, diffusion probability q = 1/4
+and persistence λi = 0.8, 0.9, 0.95. For the lag sweep, we set n = 8, v = 4, 2, 0, q = 1/4, λ = 0.9.
+For the context coherence sweep we set n = 2, v = 0, q = 0, λ = 0.95, and key probabilities
+ψi = 0, 0.75, 1.
+These parameter sweeps selectively modulate magnitude, lag coherence and context coherence:
+
+Magnitude sweep. We only differ λi , hence all SN > 0 and therefore Ec |SN | = Ec SN and so
+ρτ = 1, and likewise ρc = 1. Recall that
+                                                      ri (1 − riH )
+                                         ai = λi c1                                                  (47)
+                                                          1 − ri
+with ri = λi c1 (1 − ε), giving magnitude parameters of 0.82, 1.23, 1.50 for λ = 0.8, 0.9, 0.95.
+
+Lag sweep. We have that λ, c1 , ε are shared, hence the magnitude is fixed across all latents. Only
+                                                             1−αk−1
+θ varies, which varies αi = λc1 eiθi , and with Sk = αi 1−α   i
+                                                                i
+                                                                  , we have that ρτ = 1, 0.35, 0.24 for
+θi = 0, π/2, π. For ρc , the sign of SN is shared across all contexts for θ = 0, π and so ρc = 1. For
+π/2, the value is slightly less, at ρc = 0.945.
+
+Context sweep. For the context sweep, we modified ψi only. This keeps ρτ and magnitude a fixed,
+while ρc = ψ, as Ec [Wt−1 SN ] = ψEc SN and E|Wt−1 SN | = Ec SN .
+
+G     C OMPUTING ALIGNMENT OF J- LENS VECTORS AND LATENT STATE
+      REPRESENTATIONS
+
+We compute the Jacobian lens on 1000 sampled sequences from the task HMM after a 32-token
+burn-in period, for sequences of length 192. We computed the Jacobian only on the tokens that
+revealed latent states, totaling about 19,000 sources. We averaged over H = 128 lags. The Jacobian
+was computed with forward-mode autodifferentiation and validated with a split-halves analysis. For
+the Bayes filter, the input is separated by latent, and the output is the predicted distribution over each
+latent separately as well.
+We computed the singular value decomposition JH = U ΣV ∗ using standard linear algebra routines
+in Python. The left singular vectors U are the output directions that the Jacobian writes, while the
+right singular vectors V are the directions that the model reads. They are ordered by the singular
+values on the diagonal of Σ.
+
+H     A LIGNMENT BETWEEN J- LENS VECTORS AND LATENT VECTORS
+We identify the relationship between the J-lens vectors and the latent state features by identifying an
+encoding and decoding subspace for each latent state mode ϕj (X (i) ) (the Fourier mode j of latent
+
+
+                                                   21
+Preprint
+
+
+
+
+state i), and computing the overlap between the J-lens vector and these subspaces. Specifically, we
+take ns sequences and, at the last time step of each, record p latent state patterns (e.g. ℜ ϕ1 (X (1) )
+and ℑ ϕ1 (X (1) ), the real and imaginary parts of the first Fourier mode of latent state 1). We stack the
+centered residual activity vectors into Z ∈ Rns ×d and the centered patterns into Φ ∈ Rns ×p , which
+has two columns (real and imaginary parts) for each latent mode. These are the patterns on which
+encoding and decoding regression is done.
+We compute the encoding direction of each pattern independently via
+                                      E = diag(Φ⊤ Φ)−1 Φ⊤ Z,                                         (48)
+which is a map from patterns to activity; the diagonal means that each pattern is regressed indepen-
+dently, rather than jointly. For a decoding analysis, we reverse the process, computing
+                                    Di = (Z ⊤ Z + νI)−1 Z ⊤ Mi ,                                     (49)
+where ν is a ridge penalty and Mi ∈ Rns ×2 holds the Bayes filter beliefs of latent i, for example
+       (i)
+E[ϕ1 (Xt ) | Y≤t ], split into real and imaginary parts.
+On the output side, the patterns are directly readable from the tokens. Each token represents a
+particular state of all latents, so we can directly align the Fourier mode patterns broadcast to the
+output singular vectors. That is, each output singular vector is in RV , and for each Fourier mode of
+each latent we construct a vector in RV by setting the entry of each token to cos(2πx/n) (or sin),
+where x is the state of that latent in the token. Then, the encoding analysis simply comes down to
+projection of the J-lens singular vector onto the plane spanned by each pattern individually.
+We compute alignment by measuring how much a unit vector of the J-lens lies in the span of a group
+of encoding or decoding directions, which in practice are taken to be the vectors corresponding to a
+single mode of a latent state (typically two vectors corresponding to the sine and cosine directions).
+We define the overlap of a unit lens vector v by projecting it onto the span of the ki reference vectors
+corresponding to the relevant feature:
+                                          Oi (v) = Q⊤
+                                                    i v ,                                            (50)
+where the columns of Qi are an orthonormal basis for the ki reference vectors, constructed with a
+QR decomposition. Under this construction, a random unit direction in d dimensions has an expected
+squared
+p        projection of ki /d onto a ki -dimensional subspace, making the chance level of overlap
+  ki /d, with ki = 2 for Fourier modes and d = 128. We assign each J-lens direction to the latent
+with the largest overlap.
+
+I   VALIDATING SINGULAR VALUE SWITCHING THEORY
+The switching analysis (Appendix E.1) makes two predictions. First, in the large-H limit the singular
+value of each latent’s first Fourier mode is σi = |αi | ri / 1 − ri eiθi (Eq. (44)). Second, for a static
+latent 0 with swept persistence λ0 and a fixed latent 1, the two singular values cross, and the top
+J-lens direction switches from latent 1 to latent 0, at the persistence λ∗0 of Eq. (46). We test both
+predictions on the Bayes filter, and the second on transformers trained across the switch.
+
+Task. We use the toy-model HMM with two unkeyed latents on rings of n = 8 states, diffusion
+probability q = 1/4 and reveal probability ε = 0.2, which gives V = 82 + 1 = 65 tokens. Latent 0
+is static (v0 = 0) and its persistence λ0 is swept. Latent 1 has fixed persistence λ1 = 0.95 and
+velocity v1 ∈ {1, 2, 3, 4}, that is, angular velocity θ1 = πv1 /4 ∈ {π/4, π/2, 3π/4, π}, which are all
+the nonzero turns a ring of 8 allows, up to direction.
+
+Theory. The predicted singular values are Eq. (44), evaluated for each latent on mode j = 1. The
+predicted switch point is Eq. (46), which depends only on latent 1 and the shared parameters, not
+on λ0 . The series for Ec |Sj,N | (Eq. (43)), needed for the individual coherences but not for σi , is
+truncated at 200 terms.
+
+Measuring the singular values. We compute the J-lens as in Appendix G, on 1000 sampled
+sequences of 192 tokens with a 32-token burn-in, using only the revealed source tokens, and sum
+
+
+                                                   22
+Preprint
+
+
+
+
+over H = 64 lags. The first Fourier mode of each latent is a plane (its real and imaginary parts), so
+each latent owns two singular directions. We assign the J-lens directions to latents by the overlap of
+their output side with each latent’s mode-1 pattern (Appendix H), and take σi to be the mean of the
+two singular values assigned to latent i. For the Bayes filter the two are degenerate (Appendix E.1).
+
+I.1   BAYES FILTER
+
+Singular values. We sweep λ0 ∈ [0.55, 0.95] in steps of 0.025 at θ1 = π/2, and compare the
+measured σ0 and σ1 with Eq. (44). The same sampled sequences are reused at every λ0 , so that
+sampling noise does not vary along the sweep.
+
+Switch point. For each θ1 we measure σ0 and σ1 at seven values of λ0 , spaced 0.02 apart and
+centered on Eq. (46). We locate the crossing by linear interpolation of log(σ0 /σ1 ), which increases
+monotonically with λ0 , and compare it with Eq. (46).
+
+I.2   T RANSFORMER
+
+Training. For each θ1 we train transformers (Appendix F) on a grid of 11 persistences λ0 = λ∗0 +∆,
+with ∆ from −0.24 to 0.16 in steps of 0.04 and λ∗0 from Eq. (46). The grid is wide because the
+transformer’s switch need not sit at the filter’s. At every grid point we train 5 models from independent
+seeds, 220 models in total, and compute each model’s J-lens at layers ℓ = 0 and ℓ = 1 on 1000
+freshly sampled sequences. The transformer’s lens is in token-score units, so its singular values are
+on a different scale from the filter’s (Section 3.2). We therefore compare only the location of the
+crossing with the theory.
+
+Estimating the crossing. For each model we take the difference ∆σ = σ0 − σ1 and compute its
+mean and standard deviation over seeds at each grid point. We then smooth these with a Savitzky–
+Golay filter (a least-squares quadratic over a window of 5 grid points). The crossing λ̂∗0 is where the
+smoothed mean µ changes sign, found by linear interpolation on that grid step, and we propagate the
+spread across seeds into an uncertainty on the crossing as
+                                                        s(λ̂∗0 )
+                                        δ λ̂∗0 =                       .                            (51)
+                                                   |dµ/dλ0 | (λ̂∗0 )
+
+We compare λ̂∗0 ± δ λ̂∗0 at each layer with Eq. (46).
+
+J     S UPPLEMENTARY R ESULTS
+
+
+
+
+                                                      23
+Preprint
+
+
+
+
+                                                     magnitude a (relative)               lag coherence ρτ                     context coherence ρ
+                                                                                                                                                                   0.95
+                                              1.0     R 2 = 1.000
+
+
+
+
+                 measured by the lens
+
+
+
+
+                                                                                                                                                                             magnitude sweep
+                    (Bayes filter)
+
+
+
+
+                                                                                                                                                                              persistence λ
+                                                                                                                                                                   0.9
+
+
+                                              0.5
+
+
+
+
+                                              0.0                                                                                                                  0.8
+
+
+                                                                                                                                                                   180
+
+
+
+
+                                                                                                                                                                          turn per token θ (degrees)
+                                              1.0                                          R 2 = 1.000
+                 measured by the lens
+                    (Bayes filter)
+
+
+
+
+                                                                                                                                                                                  lag sweep
+                                                                                                                                                                   90
+                                              0.5
+
+
+
+
+                                              0.0                                                                                                                  0
+
+
+                                                                                                                                                                   1
+                                              1.0                                                                               R 2 = 1.000
+                 measured by the lens
+
+
+
+
+                                                                                                                                                                   0.75
+
+
+
+
+                                                                                                                                                                             context sweep
+                    (Bayes filter)
+
+
+
+
+                                                                                                                                                                              key mean ψ
+                                              0.5
+
+
+
+
+                                              0.0                                                                                                                  0
+                                                    0.0            0.5             1.0   0.0            0.5             1.0   0.0           0.5              1.0
+                                                          predicted by theory                  predicted by theory                  predicted by theory
+
+
+Figure 11: Validation of the J-lens theory for the Bayes filter. X-axis denotes the value predicted by the theory
+(Eq. (19)), while the y-axis denotes the value measured from the lens, for magnitude a, lag coherence ρτ and
+context coherence ρc (columns) in each sweep (rows, colored by λ, θ or ψ). There is only one visible data point
+for the fixed parameters in each sweep because the HMM is designed to fix these metrics in the Bayes filter.
+
+
+
+
+                                                                                                                                one seed          direction shared by two latents
+
+
+                                                    Bayes filter                         transformer, layer 0                  transformer, layer 1
+                                                                                                                                                                   0.95
+
+                                              1
+                                                                                                                                                                             magnitude sweep
+                              measured rank
+
+
+
+
+                                                                                                                                                                              persistence λ
+
+
+
+
+                                                                                                                                                                   0.9
+
+                                              2
+
+
+
+                                              3
+
+                                                                                                                                                                   0.8
+
+
+                                                                                                                                                                   180
+                                                                                                                                                                          turn per token θ (degrees)
+
+
+
+
+                                              1
+                              measured rank
+
+
+
+
+                                                                                                                                                                                  lag sweep
+
+
+
+
+                                              2                                                                                                                    90
+
+
+
+                                              3
+
+                                                                                                                                                                   0
+
+
+                                                                                                                                                                   1
+
+                                              1
+                              measured rank
+
+
+
+
+                                                                                                                                                                   0.75
+                                                                                                                                                                             context sweep
+                                                                                                                                                                              key mean ψ
+
+
+
+
+                                              2
+
+
+
+                                              3
+
+                                                                                                                                                                   0
+                                                          1         2          3               1         2          3               1         2          3
+                                                              predicted rank                       predicted rank                       predicted rank
+
+
+Figure 12: Validation of the J-lens theory rank prediction for the Bayes filter and the transformer. X-axis denotes
+the predicted rank order of the singular vectors corresponding to each particular latent (colored by their task
+parameter λ, θ or ψ), while the y-axis denotes the measured rank in the J-lens.
+
+
+
+
+                                                                                                              24
+Preprint
+
+
+
+
+                                                                                                                                                                                 input side        other patterns
+                                     persistence λ (→ larger magnitude)
+                                                                                                                                                                                 output side       random direction
+                                    0.8                      0.9         0.95
+                                     Bayes filter                                                                          transformer, layer 0                               transformer, layer 1
+                              1.0
+alignment of lens direction
+ with encoding directions
+
+
+
+
+                              0.5
+
+
+
+
+                              0.0
+                                          1         2        3       4           5      6                                       1     2       3      4       5       6           1       2     3    4     5     6
+                                                 lens direction (rank)                                                               lens direction (rank)                              lens direction (rank)
+
+Figure 13: Alignment of the J-lens directions with the encoding directions in the magnitude sweep.
+Alignment Oi of the J-lens singular vectors (solid: input side vi , hatched: output side ui ), ranked by singular
+value, with the encoding directions E of each latent (colored by persistence λ) and with other patterns of the
+HMM (gray). Columns show the Bayes filter belief state (left), transformer layer 0 (middle) and layer 1 (right).
+Dashed line: alignment of a random direction.
+
+
+a                                                                                                 b                                                                   c
+
+                                                                                                                                                         latent's own decoding directions          random direction
+                                              layer 0            layer 1             layer 2                                                             other latents' decoding directions
+                                    belief decoders                                                                             transformer, layer 0                           transformer, layer 1
+                                                                                            alignment of lens direction
+                                                                                             with decoding directions
+
+
+
+
+                              1.0                                                                                         1.0
+     test decoding R 2
+
+
+
+
+                              0.5                                                                                         0.5
+
+
+
+
+                              0.0                                                                                         0.0
+                                          λ = 0.8        λ = 0.9            λ = 0.95                                                λ = 0.8       λ = 0.9        λ = 0.95            λ = 0.8   λ = 0.9    λ = 0.95
+
+
+
+Figure 14: Alignment of the J-lens vectors with the decoding vectors for each latent in the magnitude sweep. (a)
+Test decoding accuracy (R2 ) for the Bayes filter belief state mt on each layer of the transformer, for each latent
+in the sweep. (b, c) Alignment Oi of the J-lens directions vi with each latent’s own decoding directions Di
+(colored) and with the other latents’ decoding directions (gray), for transformer layer 0 (b) and layer 1 (c).
+
+
+
+                                                                                                                                                                                 input side        other patterns
+                                     angular velocity θ (← more temporally coherent)
+                                                                                                                                                                                 output side       random direction
+                                    0                   90                 180
+                                     Bayes filter                                                                          transformer, layer 0                               transformer, layer 1
+                              1.0
+alignment of lens direction
+ with encoding directions
+
+
+
+
+                              0.5
+
+
+
+
+                              0.0
+                                          1         2        3       4           5      6                                       1     2       3      4       5       6           1       2     3    4     5     6
+                                                 lens direction (rank)                                                               lens direction (rank)                              lens direction (rank)
+
+Figure 15: Alignment of the J-lens directions with the encoding directions in the lag coherence sweep.
+Latents are colored by angular velocity θ. Panels as in Fig. 13.
+
+
+
+                                                                                                                                          25
+Preprint
+
+
+
+
+a                                                                                         b                                                                c
+
+                                                                                                                                               latent's own decoding directions            random direction
+                                            layer 0        layer 1           layer 2                                                           other latents' decoding directions
+                                    belief decoders                                                                     transformer, layer 0                         transformer, layer 1
+
+
+
+
+                                                                                    alignment of lens direction
+                                                                                     with decoding directions
+                              1.0                                                                                 1.0
+     test decoding R 2
+
+
+
+
+                              0.5                                                                                 0.5
+
+
+
+
+                              0.0                                                                                 0.0
+                                            0°          90°              180°                                               0°           90°           180°                0°            90°           180°
+
+
+
+Figure 16: Alignment of the J-lens vectors with the decoding vectors for each latent in the lag coherence sweep.
+(a) Test decoding accuracy (R2 ) for the Bayes filter belief state mt on each layer of the transformer, for each
+latent in the sweep. (b, c) Alignment Oi of the J-lens directions vi with each latent’s own decoding directions
+Di (colored) and with the other latents’ decoding directions (gray), for transformer layer 0 (b) and layer 1 (c).
+
+
+
+                                                                                                                                                                       input side          other patterns
+                                    key frequency ψ (→ more contextually coherent)
+                                                                                                                                                                       output side         random direction
+                                    0                      0.75      1
+                                    Bayes filter                                                                   transformer, layer 0                             transformer, layer 1
+                              1.0
+alignment of lens direction
+ with encoding directions
+
+
+
+
+                              0.5
+
+
+
+
+                              0.0
+                                        1         2    3       4         5      6                                       1    2     3       4       5      6            1        2    3         4   5          6
+                                                 lens direction (rank)                                                      lens direction (rank)                           lens direction (rank)
+
+Figure 17: Alignment of the J-lens directions with the encoding directions in the context coherence sweep.
+Latents are colored by key bias ψ. Panels as in Fig. 13.
+
+
+a                                                                                         b                                                                c
+
+                                                                                                                                               latent's own decoding directions            random direction
+                                            layer 0        layer 1           layer 2                                                           other latents' decoding directions
+                                    belief decoders                                                                     transformer, layer 0                         transformer, layer 1
+                                                                                    alignment of lens direction
+                                                                                     with decoding directions
+
+
+
+
+                              1.0                                                                                 1.0
+     test decoding R 2
+
+
+
+
+                              0.5                                                                                 0.5
+
+
+
+
+                              0.0                                                                                 0.0
+                                        ψ=0           ψ = 0.75           ψ=1                                                ψ=0        ψ = 0.75        ψ=1                 ψ=0       ψ = 0.75      ψ=1
+
+
+
+Figure 18: Alignment of the J-lens vectors with the decoding vectors for each latent in the context coherence
+sweep. (a) Test decoding accuracy (R2 ) for the Bayes filter belief state mt on each layer of the transformer,
+for each latent in the sweep. (b, c) Alignment Oi of the J-lens directions vi with each latent’s own decoding
+directions Di (colored) and with the other latents’ decoding directions (gray), for transformer layer 0 (b) and
+layer 1 (c).
+
+
+
+                                                                                                                                  26
+Preprint
+
+
+
+
+                                                                                input side      reveal               key of ψ = 0.75       random direction
+                                                                                output side     key of ψ = 0
+
+                                    transformer, layer 0                                      transformer, layer 1
+                              1.0
+alignment of lens direction
+ with encoding directions
+
+
+
+
+                              0.5
+
+
+
+
+                              0.0
+                                       1        2          3      4         5      6             1             2        3         4         5         6
+                                                    lens direction (rank)                                          lens direction (rank)
+
+Figure 19: J-lens direction alignment with other features of the HMM that are not the latent states in the
+context sweep. Black denotes the reveal state Bt : whether or not the latent state is revealed in the token, and the
+colors denote the key state Wt−1 (whether the latent state is flipped) for each key bias ψ.
+
+
+
+
+                                                                                       27
+

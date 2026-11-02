@@ -1,0 +1,42 @@
+# Python caches and environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Editor and OS metadata
+.vscode/
+.idea/
+.DS_Store
+
+# Model weights, tensors, and training checkpoints
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.bin
+
+# Generated experiment artifacts
+j_lens_output/
+reports/
+.recovery/
+oscillation_study/comparison/
+oscillation_study/other_prompts/
+oscillation_study/output/
+oscillation_study/output_finance/
+oscillation_study/random_comparison/
+oscillation_study/training_five/
+oscillation_study/training_prompt_audit/
+single_jacobian_study/next_token_accuracy/
+single_jacobian_study/plots/
+single_jacobian_study/results/
+single_jacobian_study/results_next/
+
+# Runtime logs
+*.log
+
+# Separate upstream checkout (has its own Git history)
+anthropic-jacobian-lens/

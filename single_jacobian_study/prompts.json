@@ -1,0 +1,26 @@
+{
+  "source": [
+    "The museum opened its doors shortly after sunrise. Inside, a curator carefully arranged pottery, maps, and ancient tools in glass cases. Each object carried a label explaining where it was found and what researchers believed about its original use.",
+    "Mountain rivers carry sediment from high valleys into broad plains. During spring, melting snow increases the flow, reshaping banks and moving stones downstream. Communities depend on this water for farming, electricity, transport, and the survival of local ecosystems.",
+    "A baker prepares dough by mixing flour, water, yeast, and salt. After resting in a warm room, the mixture rises as fermentation produces gas. The dough is shaped into loaves and baked until its crust becomes brown and crisp.",
+    "The orchestra rehearsed a difficult passage several times before the concert. The conductor asked the strings to soften their entrance while the brass maintained a steady rhythm. Gradually, the separate sections began to sound like parts of a single musical phrase.",
+    "An operating system coordinates the resources of a computer. It schedules processes, manages memory, and provides interfaces to storage devices. Applications depend on these services to read files and communicate without controlling every hardware detail directly.",
+    "The astronomer compared photographs taken on different nights. Most points of light remained fixed relative to one another, but one faint object had moved. Additional observations would help determine whether it was an asteroid, a comet, or an artificial satellite.",
+    "A family planted vegetables in a small garden behind their house. They recorded rainfall and checked the soil each morning. Some plants needed support as they grew, while others required shade during the hottest hours of the afternoon.",
+    "The court examined letters, financial records, and testimony from several witnesses. Lawyers disagreed about the meaning of a particular transaction. The judge reminded everyone that a conclusion had to follow from the available evidence rather than speculation about motives.",
+    "A cell uses chemical signals to respond to changes in its environment. Proteins at its surface detect certain molecules and trigger reactions inside. These reactions can alter metabolism, movement, or gene expression, depending on the type and condition of the cell.",
+    "The railway station stood at the center of a growing industrial town. Trains brought coal and raw materials to nearby factories and carried finished goods toward the coast. New neighborhoods developed around the routes connecting workshops, markets, and workers' homes."
+  ],
+  "evaluation": [
+    "The history of astronomy spans many cultures and centuries. Ancient observers recorded the motions of the Sun, Moon, planets, and stars, while later scholars developed mathematical models that gradually changed humanity's understanding of its place in the universe.",
+    "Mira found a sealed envelope beneath the floorboards of the empty house. The handwriting looked familiar, although the date was decades before her birth. She sat by the window and began to read as rain tapped against the glass.",
+    "Customer: My package arrived yesterday, but the screen is cracked. Agent: I can help arrange a replacement. Could you confirm the order number and whether the outer box was damaged? Customer: The box looked normal, and I still have the receipt.",
+    "def count_words(text):\n    counts = {}\n    for word in text.lower().split():\n        counts[word] = counts.get(word, 0) + 1\n    return counts\n\n# The function counts repeated words without distinguishing uppercase letters.\nresult = count_words('Blue sky blue sea')\n",
+    "A triangle has three sides and three interior angles. In ordinary Euclidean geometry, those angles sum to one hundred eighty degrees. If two angles are forty and sixty degrees, the third must be eighty degrees because the total is fixed.",
+    "To make a simple soup, soften chopped onions in a little oil. Add carrots, beans, and vegetable stock, then simmer until the vegetables are tender. Taste before adding salt, and finish with fresh herbs just before serving the meal.",
+    "Reporter: What changed after the bridge opened? Resident: The trip to the hospital became much shorter. Reporter: Did traffic increase? Resident: Yes, especially on weekends, but local shops also gained customers who previously stayed on the other side of the river.",
+    "SELECT department, COUNT(*) AS employees\nFROM staff\nWHERE active = true\nGROUP BY department\nORDER BY employees DESC;\n\nThis query groups active staff by department and returns the largest groups first. Departments without active staff do not appear in the result.\n",
+    "The Pacific Ocean is the largest ocean on Earth. Its waters extend between Asia and Australia in the west and the Americas in the east. Islands across this region support diverse languages, histories, and ecosystems shaped by navigation, migration, and volcanic activity.",
+    "The goalkeeper watched the approaching striker and took one step forward. A defender rushed back toward the penalty area, but the pass went wide. The crowd grew quiet for a moment before the referee signaled that play should continue."
+  ]
+}
