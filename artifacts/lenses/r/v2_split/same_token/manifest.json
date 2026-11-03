@@ -1,0 +1,181 @@
+{
+  "method": "r",
+  "estimator": "relp",
+  "model_id": "Qwen/Qwen3.5-2B",
+  "model_revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+  "tokenizer_revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+  "dataset": "NeelNanda/pile-10k",
+  "dataset_revision": "127bfedcd5047750df5ccf3a12979a47bfa0bafa",
+  "dataset_recipe": "first 100 nonempty train documents, dataset order, no shuffle",
+  "target": {
+    "site": "post",
+    "layer": 23
+  },
+  "sites": {
+    "embed": true,
+    "mid": [],
+    "post": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22
+    ]
+  },
+  "max_seq_len": 128,
+  "skip_first": 4,
+  "fitting_recipe": {
+    "prompts": 87,
+    "max_seq_len": 128,
+    "skip_first": 4,
+    "dimension_batch": 16,
+    "model_compute_dtype": "bfloat16",
+    "accumulator_dtype": "float32"
+  },
+  "attention_implementation": "sdpa",
+  "rules": {
+    "ln_rule": true,
+    "identity_rule": true,
+    "half_rule": true,
+    "norm_modules": 49,
+    "mlp_modules": 24
+  },
+  "reference_sha256": "1737a7199d1f562941b4d59ef3d02de96322c4c6a7228a0213e3d94922afcb4f",
+  "reference_fitter_sha256": "d38fa45ad4d194b800b90bd5e192969111fe63b18b341699ed0f1796a031570c",
+  "relp_rules_sha256": "aeade88e383007ee74426b38df1f8cd971861f09f12d1565b623fdb707de4ac3",
+  "diagonal_adjoint_sha256": "b46ddb11f4cfe6397d9a0e8696a7b0199d5c0cf77fa27478d675bc9a11aacffa",
+  "block_adjoint_sha256": "b7f95fef6e63e96555c0d1e7b8248ccbdeb1b0b34d79882f56d9e42b101964b8",
+  "history_helper_sha256": "c5247ba6eac30f66bdfde8b92caa500ccf43225ff5e36cb47951b6ed6e68e1e0",
+  "future_method": "matched FP32 normal minus same-token, identical prompt and source averaging",
+  "numerical_note": "Exact causal diagonal identity; native forward unchanged; equivalent adjoint has ordinary BF16 rounding differences",
+  "relp_forward_parity_max_error": 0.0,
+  "format_version": 2,
+  "artifact": "lens.safetensors",
+  "sha256": "368a54a80150bc3f50126dc084d2e02da5a8d8a5064aa95c0be03d3c8c49f350",
+  "method_name": "same_token_relp",
+  "provenance": "v2_matched_token_target_split",
+  "prompts": 87,
+  "requested_prompts": 87,
+  "complete": true,
+  "dtype": "float16",
+  "hidden_size": 2048,
+  "tensor_shapes": {
+    "embed": [
+      2048,
+      2048
+    ],
+    "post.0": [
+      2048,
+      2048
+    ],
+    "post.1": [
+      2048,
+      2048
+    ],
+    "post.10": [
+      2048,
+      2048
+    ],
+    "post.11": [
+      2048,
+      2048
+    ],
+    "post.12": [
+      2048,
+      2048
+    ],
+    "post.13": [
+      2048,
+      2048
+    ],
+    "post.14": [
+      2048,
+      2048
+    ],
+    "post.15": [
+      2048,
+      2048
+    ],
+    "post.16": [
+      2048,
+      2048
+    ],
+    "post.17": [
+      2048,
+      2048
+    ],
+    "post.18": [
+      2048,
+      2048
+    ],
+    "post.19": [
+      2048,
+      2048
+    ],
+    "post.2": [
+      2048,
+      2048
+    ],
+    "post.20": [
+      2048,
+      2048
+    ],
+    "post.21": [
+      2048,
+      2048
+    ],
+    "post.22": [
+      2048,
+      2048
+    ],
+    "post.3": [
+      2048,
+      2048
+    ],
+    "post.4": [
+      2048,
+      2048
+    ],
+    "post.5": [
+      2048,
+      2048
+    ],
+    "post.6": [
+      2048,
+      2048
+    ],
+    "post.7": [
+      2048,
+      2048
+    ],
+    "post.8": [
+      2048,
+      2048
+    ],
+    "post.9": [
+      2048,
+      2048
+    ]
+  },
+  "created_at": "2026-11-03T16:58:39.524960+00:00",
+  "reduction": "equal prompt mean of mean over valid sources of sum over selected valid targets",
+  "target_selection": "target == source"
+}

@@ -1,0 +1,89 @@
+{
+  "forward_max_error": 0.0,
+  "off_position_gradient_max": 0.0,
+  "checks": [
+    {
+      "site": "embed",
+      "position": 4,
+      "relative_error": 0.01601746864616871,
+      "cosine": 0.9998741149902344,
+      "future_relative_error": 0.017542507499456406,
+      "future_absolute_error": 12.411978721618652,
+      "future_reference_norm": 707.537353515625
+    },
+    {
+      "site": "post.0",
+      "position": 4,
+      "relative_error": 0.014162503182888031,
+      "cosine": 0.9998998045921326,
+      "future_relative_error": 0.010991045273840427,
+      "future_absolute_error": 4.9725751876831055,
+      "future_reference_norm": 452.42059326171875
+    },
+    {
+      "site": "post.12",
+      "position": 4,
+      "relative_error": 0.008860362693667412,
+      "cosine": 0.9999608397483826,
+      "future_relative_error": 0.013423916883766651,
+      "future_absolute_error": 0.6327142119407654,
+      "future_reference_norm": 47.13335418701172
+    },
+    {
+      "site": "embed",
+      "position": 17,
+      "relative_error": 0.01445943582803011,
+      "cosine": 0.9998998641967773,
+      "future_relative_error": 0.012632793746888638,
+      "future_absolute_error": 11.483524322509766,
+      "future_reference_norm": 909.02490234375
+    },
+    {
+      "site": "post.0",
+      "position": 17,
+      "relative_error": 0.01347719132900238,
+      "cosine": 0.9999144077301025,
+      "future_relative_error": 0.009682415053248405,
+      "future_absolute_error": 5.26398229598999,
+      "future_reference_norm": 543.6641845703125
+    },
+    {
+      "site": "post.12",
+      "position": 17,
+      "relative_error": 0.009404360316693783,
+      "cosine": 0.9999558925628662,
+      "future_relative_error": 0.00919751264154911,
+      "future_absolute_error": 1.3021191358566284,
+      "future_reference_norm": 141.57296752929688
+    },
+    {
+      "site": "embed",
+      "position": 126,
+      "relative_error": 0.018210401758551598,
+      "cosine": 0.9998356699943542,
+      "future_relative_error": null,
+      "future_absolute_error": 0.7392735481262207,
+      "future_reference_norm": 0.0
+    },
+    {
+      "site": "post.0",
+      "position": 126,
+      "relative_error": 0.014037960208952427,
+      "cosine": 0.999901533126831,
+      "future_relative_error": null,
+      "future_absolute_error": 0.3344464600086212,
+      "future_reference_norm": 0.0
+    },
+    {
+      "site": "post.12",
+      "position": 126,
+      "relative_error": 0.010058743879199028,
+      "cosine": 0.9999494552612305,
+      "future_relative_error": null,
+      "future_absolute_error": 0.32554784417152405,
+      "future_reference_norm": 0.0
+    }
+  ],
+  "method": "full-coordinate causal diagonal blocks, not stochastic; equivalent recurrent FP32 adjoint",
+  "numerical_note": "BF16 rounding differs from native chunk/SDPA backward; mathematically identical diagonal derivatives"
+}

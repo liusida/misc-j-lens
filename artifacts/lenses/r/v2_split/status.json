@@ -1,0 +1,252 @@
+{
+  "completed": 87,
+  "requested": 87,
+  "reconstruction_max_error": 0.0,
+  "latest": {
+    "n_prompts": 87,
+    "seconds": 227.201858179993,
+    "sites": {
+      "embed": {
+        "normal_cosine_to_v2": 0.9994776844978333,
+        "same_cosine_to_v2": 0.510008692741394,
+        "future_cosine_to_v2": 0.9125708937644958,
+        "same_norm": 68.90386962890625,
+        "future_norm": 147.71791076660156,
+        "normal_norm": 170.033447265625,
+        "normal_lim": 0.012418345548212528,
+        "same_lim": 0.007840663194656372
+      },
+      "post.0": {
+        "normal_cosine_to_v2": 0.9990958571434021,
+        "same_cosine_to_v2": 0.5245066285133362,
+        "future_cosine_to_v2": 0.9307292699813843,
+        "same_norm": 20.136795043945312,
+        "future_norm": 48.338924407958984,
+        "normal_norm": 55.60260772705078,
+        "normal_lim": 0.014282566495239735,
+        "same_lim": 0.008022084832191467
+      },
+      "post.1": {
+        "normal_cosine_to_v2": 0.9993075132369995,
+        "same_cosine_to_v2": 0.5191152095794678,
+        "future_cosine_to_v2": 0.9337660074234009,
+        "same_norm": 20.162927627563477,
+        "future_norm": 49.63711929321289,
+        "normal_norm": 56.855709075927734,
+        "normal_lim": 0.013385732658207417,
+        "same_lim": 0.007748971693217754
+      },
+      "post.10": {
+        "normal_cosine_to_v2": 1.0000721216201782,
+        "same_cosine_to_v2": 0.8071338534355164,
+        "future_cosine_to_v2": 0.896608293056488,
+        "same_norm": 32.271080017089844,
+        "future_norm": 43.2667236328125,
+        "normal_norm": 64.83570098876953,
+        "normal_lim": 0.0072027589194476604,
+        "same_lim": 0.006306410767138004
+      },
+      "post.11": {
+        "normal_cosine_to_v2": 1.0001181364059448,
+        "same_cosine_to_v2": 0.818011462688446,
+        "future_cosine_to_v2": 0.8928976058959961,
+        "same_norm": 33.97834777832031,
+        "future_norm": 43.65366744995117,
+        "normal_norm": 66.7650375366211,
+        "normal_lim": 0.006965409033000469,
+        "same_lim": 0.006093418225646019
+      },
+      "post.12": {
+        "normal_cosine_to_v2": 1.0001552104949951,
+        "same_cosine_to_v2": 0.8403850793838501,
+        "future_cosine_to_v2": 0.8751898407936096,
+        "same_norm": 36.37123489379883,
+        "future_norm": 40.92405700683594,
+        "normal_norm": 66.37186431884766,
+        "normal_lim": 0.006584742106497288,
+        "same_lim": 0.005804572720080614
+      },
+      "post.13": {
+        "normal_cosine_to_v2": 1.0001554489135742,
+        "same_cosine_to_v2": 0.8568220138549805,
+        "future_cosine_to_v2": 0.8402757048606873,
+        "same_norm": 38.72465133666992,
+        "future_norm": 36.99940490722656,
+        "normal_norm": 64.25984191894531,
+        "normal_lim": 0.0062986332923173904,
+        "same_lim": 0.005539116449654102
+      },
+      "post.14": {
+        "normal_cosine_to_v2": 1.0002251863479614,
+        "same_cosine_to_v2": 0.899071455001831,
+        "future_cosine_to_v2": 0.7794820666313171,
+        "same_norm": 40.59389114379883,
+        "future_norm": 28.518247604370117,
+        "normal_norm": 58.713050842285156,
+        "normal_lim": 0.0058001866564154625,
+        "same_lim": 0.005157471634447575
+      },
+      "post.15": {
+        "normal_cosine_to_v2": 1.0002731084823608,
+        "same_cosine_to_v2": 0.9346879124641418,
+        "future_cosine_to_v2": 0.7563951015472412,
+        "same_norm": 42.708770751953125,
+        "future_norm": 23.397552490234375,
+        "normal_norm": 57.6014289855957,
+        "normal_lim": 0.00540913688018918,
+        "same_lim": 0.004756433889269829
+      },
+      "post.16": {
+        "normal_cosine_to_v2": 1.0003509521484375,
+        "same_cosine_to_v2": 0.9499186277389526,
+        "future_cosine_to_v2": 0.6639785766601562,
+        "same_norm": 44.92607879638672,
+        "future_norm": 18.89421272277832,
+        "normal_norm": 55.20210266113281,
+        "normal_lim": 0.004649573937058449,
+        "same_lim": 0.0041187843307852745
+      },
+      "post.17": {
+        "normal_cosine_to_v2": 1.0003844499588013,
+        "same_cosine_to_v2": 0.9582967758178711,
+        "future_cosine_to_v2": 0.6322672367095947,
+        "same_norm": 46.55610275268555,
+        "future_norm": 17.299781799316406,
+        "normal_norm": 55.53129577636719,
+        "normal_lim": 0.0040639229118824005,
+        "same_lim": 0.0036494743544608355
+      },
+      "post.18": {
+        "normal_cosine_to_v2": 1.0004117488861084,
+        "same_cosine_to_v2": 0.9624629616737366,
+        "future_cosine_to_v2": 0.6224229335784912,
+        "same_norm": 47.878929138183594,
+        "future_norm": 16.732759475708008,
+        "normal_norm": 56.473297119140625,
+        "normal_lim": 0.00354950362816453,
+        "same_lim": 0.003186298767104745
+      },
+      "post.19": {
+        "normal_cosine_to_v2": 1.0004842281341553,
+        "same_cosine_to_v2": 0.9817298650741577,
+        "future_cosine_to_v2": 0.6444104909896851,
+        "same_norm": 47.87055206298828,
+        "future_norm": 12.06534481048584,
+        "normal_norm": 54.74448013305664,
+        "normal_lim": 0.0031245274003595114,
+        "same_lim": 0.0028542319778352976
+      },
+      "post.2": {
+        "normal_cosine_to_v2": 0.9996461868286133,
+        "same_cosine_to_v2": 0.5996202230453491,
+        "future_cosine_to_v2": 0.9120847582817078,
+        "same_norm": 20.896400451660156,
+        "future_norm": 41.520957946777344,
+        "normal_norm": 50.41838073730469,
+        "normal_lim": 0.011879698373377323,
+        "same_lim": 0.007494393270462751
+      },
+      "post.20": {
+        "normal_cosine_to_v2": 1.0005619525909424,
+        "same_cosine_to_v2": 0.9839734435081482,
+        "future_cosine_to_v2": 0.5622931122779846,
+        "same_norm": 47.605499267578125,
+        "future_norm": 10.4169340133667,
+        "normal_norm": 52.670318603515625,
+        "normal_lim": 0.002685080049559474,
+        "same_lim": 0.002477764617651701
+      },
+      "post.21": {
+        "normal_cosine_to_v2": 1.0006340742111206,
+        "same_cosine_to_v2": 0.9877827763557434,
+        "future_cosine_to_v2": 0.4166052043437958,
+        "same_norm": 47.157814025878906,
+        "future_norm": 8.263047218322754,
+        "normal_norm": 49.99240493774414,
+        "normal_lim": 0.0021940837614238262,
+        "same_lim": 0.0020325726363807917
+      },
+      "post.22": {
+        "normal_cosine_to_v2": 1.0007221698760986,
+        "same_cosine_to_v2": 0.9934571385383606,
+        "future_cosine_to_v2": 0.15959566831588745,
+        "same_norm": 46.672611236572266,
+        "future_norm": 5.6810832023620605,
+        "normal_norm": 47.239803314208984,
+        "normal_lim": 0.0016040398040786386,
+        "same_lim": 0.0014856387861073017
+      },
+      "post.3": {
+        "normal_cosine_to_v2": 0.9997677206993103,
+        "same_cosine_to_v2": 0.6207838654518127,
+        "future_cosine_to_v2": 0.9152477979660034,
+        "same_norm": 21.187759399414062,
+        "future_norm": 41.90765380859375,
+        "normal_norm": 51.520877838134766,
+        "normal_lim": 0.010688237845897675,
+        "same_lim": 0.007316232193261385
+      },
+      "post.4": {
+        "normal_cosine_to_v2": 0.9998486638069153,
+        "same_cosine_to_v2": 0.6541579365730286,
+        "future_cosine_to_v2": 0.9149743914604187,
+        "same_norm": 22.32121467590332,
+        "future_norm": 42.409610748291016,
+        "normal_norm": 53.413387298583984,
+        "normal_lim": 0.009705672971904278,
+        "same_lim": 0.007156915497034788
+      },
+      "post.5": {
+        "normal_cosine_to_v2": 0.9999262690544128,
+        "same_cosine_to_v2": 0.6851858496665955,
+        "future_cosine_to_v2": 0.9111538529396057,
+        "same_norm": 23.85240364074707,
+        "future_norm": 42.687740325927734,
+        "normal_norm": 55.242496490478516,
+        "normal_lim": 0.008980672806501389,
+        "same_lim": 0.006934220902621746
+      },
+      "post.6": {
+        "normal_cosine_to_v2": 0.9999980330467224,
+        "same_cosine_to_v2": 0.7239519357681274,
+        "future_cosine_to_v2": 0.9033119678497314,
+        "same_norm": 24.78120231628418,
+        "future_norm": 40.20077896118164,
+        "normal_norm": 54.25434875488281,
+        "normal_lim": 0.008400634862482548,
+        "same_lim": 0.006781650707125664
+      },
+      "post.7": {
+        "normal_cosine_to_v2": 0.999973475933075,
+        "same_cosine_to_v2": 0.7333046197891235,
+        "future_cosine_to_v2": 0.910851240158081,
+        "same_norm": 26.479726791381836,
+        "future_norm": 44.03302764892578,
+        "normal_norm": 59.52682113647461,
+        "normal_lim": 0.008161220699548721,
+        "same_lim": 0.00664224149659276
+      },
+      "post.8": {
+        "normal_cosine_to_v2": 0.9999691843986511,
+        "same_cosine_to_v2": 0.7479571104049683,
+        "future_cosine_to_v2": 0.9122533202171326,
+        "same_norm": 28.343446731567383,
+        "future_norm": 46.31989669799805,
+        "normal_norm": 63.457115173339844,
+        "normal_lim": 0.007897567003965378,
+        "same_lim": 0.006553982850164175
+      },
+      "post.9": {
+        "normal_cosine_to_v2": 1.000024437904358,
+        "same_cosine_to_v2": 0.7657991647720337,
+        "future_cosine_to_v2": 0.909552812576294,
+        "same_norm": 29.7310848236084,
+        "future_norm": 46.38081359863281,
+        "normal_norm": 64.95225524902344,
+        "normal_lim": 0.0076299551874399185,
+        "same_lim": 0.0064591518603265285
+      }
+    }
+  },
+  "complete": true
+}
