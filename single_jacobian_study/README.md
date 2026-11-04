@@ -42,3 +42,43 @@ variants and the logit lens, including the positions ≥16 view.
 
 Hypothesis: next-position Jacobians may help earlier layers more than
 same-position Jacobians. This is a prediction to test, not an assumed outcome.
+
+## One-token (sentence-initial) Jacobians
+
+Question: if the entire prompt is a single token—the same object as a
+sentence’s first position—does that same-position Jacobian still beat the
+logit lens under the metrics above?
+
+```bash
+export HF_HOME=/cmlscratch/feijhan/.cache/huggingface
+uv run single_jacobian_study/run_one_token.py
+uv run single_jacobian_study/next_token_accuracy_one_token.py
+uv run single_jacobian_study/plot_one_token_blog.py
+```
+
+- Thirty distinct length-1 source prompts: the first token of each original
+  source passage plus twenty additional sentence-initial tokens.
+- Differentiate only \(J=\partial h_{23,0}/\partial h_{\ell,0}\). No averaging.
+- Same ten evaluation passages, trained-lens reference, competition ranks,
+  passage-equal MRR / top-\(k\) coverage, and next-token accuracy plots as the
+  main study. Outputs live in `results_one_token/` and
+  `next_token_accuracy_one_token/`; blog figures go to `../blog-post/`.
+
+## Matched-token first / middle / last
+
+Same measured token id \(T\); only left context changes (causal same-position
+\(J\) ignores tokens after \(T\)).
+
+```bash
+export HF_HOME=/cmlscratch/feijhan/.cache/huggingface
+# special-token filler (default <|endoftext|>)
+uv run single_jacobian_study/run_position_compare.py --filler special
+uv run single_jacobian_study/plot_position_compare.py --results results_position_special --tag special
+
+# natural-text prefixes instead of specials
+uv run single_jacobian_study/run_position_compare.py --filler text
+uv run single_jacobian_study/plot_position_compare.py --results results_position_text --tag text
+```
+
+Roles: `first` prefix 0; `middle` prefix 31 (+ suffix 31 specials); `last`
+prefix 63. Override filler with `--special-token '<|im_start|>'`.

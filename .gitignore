@@ -31,9 +31,14 @@ oscillation_study/random_comparison/
 oscillation_study/training_five/
 oscillation_study/training_prompt_audit/
 single_jacobian_study/next_token_accuracy/
+single_jacobian_study/next_token_accuracy_one_token/
+single_jacobian_study/next_token_accuracy_position_special/
 single_jacobian_study/plots/
 single_jacobian_study/results/
 single_jacobian_study/results_next/
+single_jacobian_study/results_one_token/
+single_jacobian_study/results_position_special/
+single_jacobian_study/logs/
 
 # Runtime logs
 *.log
